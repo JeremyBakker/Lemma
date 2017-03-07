@@ -26,18 +26,19 @@ module.exports = function DataFactory ($q, $http) {
 			}
 			console.log("keyArray", keyArray);
 			let sortedTokensArray = [];
-			for (var i = 0; i < (string.data.Psalms).length; i++) {
+			for (i = 0; i < (string.data.Psalms).length; i++) {
 				let oneString = [];
 				oneString = string.data.Psalms[i][keyArray[i]];
 				let tokenizedString = tokenizer.tokenize(oneString.toLowerCase());
 				tokenizedString = stopWord.removeStopwords(tokenizedString);
 				let sortedTokens = tokenizedString.sort();
-				sortedTokensArray.push(sortedTokens)
+				sortedTokensArray.push(sortedTokens);
 			}
 		console.log("sortedTokensArray", sortedTokensArray);
 		resolve(sortedTokensArray);
 		});
 	};
+	let countedTokensArray = [];
 
 	let countTokens = (tokenizedStringsArray) => {
 		console.log("tokenizedStringsArray at countTokens(): ", tokenizedStringsArray);
@@ -59,8 +60,21 @@ module.exports = function DataFactory ($q, $http) {
 					count++;
 				}
 			}
-			console.log("countedTokensArray", countedTokensArray);
 		}
+		console.log("countedTokensArray passed from countTokens:", countedTokensArray);
+		termFrequency(countedTokensArray);
+	};
+
+	let termFrequency = function (countedTokensArray) {
+		console.log("countedTokensArray received at termFrequency():", countedTokensArray);
+		for (var i = 0; i < countedTokensArray.length; i++) {
+			for (var j = 0; j < countedTokensArray[i].length; j++) {
+				let termFrequency = countedTokensArray[i][j].count/countedTokensArray[i].length;
+				countedTokensArray[i][j].termFrequency = termFrequency;
+				console.log("termFrequency", termFrequency);
+			}
+		}
+		console.log("countedTokensArray at the end of termFrequency", countedTokensArray);
 	};
 
 	return {getJSON, parseDocument, countTokens};

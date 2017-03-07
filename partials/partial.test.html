@@ -1,1 +1,8 @@
 <button ng-click="getData()">Click Me!</button>
+<button ng-click="printData()">Then Click Me!</button>
+
+<div ng-repeat="each in data">
+<p>{{each.word}}</p>
+<p>{{each.count}}</p>
+<p>{{each.termFrequency}}</p>
+</div>
