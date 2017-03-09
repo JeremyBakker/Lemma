@@ -1,13 +1,21 @@
 "use strict";
 
 module.exports = function($scope, DataFactory) {
-	console.log("dataCtrl loaded here.");
 	$scope.getData = () => {
-		console.log("click");
 		DataFactory.getJSON().then(
-			(data) => DataFactory.parseDocument(data)
+			(data) => DataFactory.parseJSON(data)
 		).then (
-			(data) => {DataFactory.countTokens(data);}
+			(data) => {DataFactory.setData(data);}
 		);
+	};
+
+	$scope.parseData = () => {
+		DataFactory.run();
+	};
+
+	$scope.printData = () => {
+		let results = DataFactory.getData();
+		console.log("results", results[0]);
+		$scope.data = results;
 	};
 };

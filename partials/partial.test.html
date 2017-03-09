@@ -1,8 +1,26 @@
-<button ng-click="getData()">Click Me!</button>
-<button ng-click="printData()">Then Click Me!</button>
+<button ng-click="getData()">Click Me to Import Data!</button>
+<button ng-click="parseData()">Then Click Me to Parse Data!</button>
+<button ng-click="printData()">Finally, Click Me to Display Data!</button>
 
-<div ng-repeat="each in data">
-<p>{{each.word}}</p>
-<p>{{each.count}}</p>
-<p>{{each.termFrequency}}</p>
-</div>
+
+
+<table style="width:100%">
+  <tr>
+    <th>Word</th>
+    <th>Count</th> 
+    <th>Term Frequency</th>
+    <th>Inverse Document Frequency</th>
+  </tr>
+  <tr ng-repeat="each in data">
+  	<td style="text-align: center"> {{each.word}} </td>
+  	<td style="text-align: center"> {{each.count}} </td>
+  	<td style="text-align: center"> {{each.termFrequency}}</td>
+    <td style="text-align: center"> {{each.idf}}</td>
+  </tr>
+</table>
+
+<!-- <div ng-repeat="each in data">
+<p>Word: {{each.word}}</p>
+<p>Count: {{each.count}}</p>
+<p>Term Frequency: {{each.termFrequency}}</p>
+</div> -->
