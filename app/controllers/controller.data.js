@@ -1,21 +1,19 @@
 "use strict";
 
 module.exports = function($scope, DataFactory) {
+	//Import the control data. 
 	$scope.getData = () => {
 		DataFactory.getJSON().then(
 			(data) => DataFactory.parseJSON(data)
-		).then (
-			(data) => {DataFactory.setData(data);}
 		);
 	};
 
 	$scope.parseData = () => {
-		DataFactory.run();
+		DataFactory.countTokens();
 	};
 
 	$scope.printData = () => {
 		let results = DataFactory.getData();
-		console.log("results", results[0]);
 		$scope.data = results;
 	};
 };

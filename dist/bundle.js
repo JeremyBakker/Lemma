@@ -20,21 +20,19 @@ app.config(function($routeProvider){
 "use strict";
 
 module.exports = function($scope, DataFactory) {
+	//Import the control data. 
 	$scope.getData = () => {
 		DataFactory.getJSON().then(
 			(data) => DataFactory.parseJSON(data)
-		).then (
-			(data) => {DataFactory.setData(data);}
 		);
 	};
 
 	$scope.parseData = () => {
-		DataFactory.run();
+		DataFactory.countTokens();
 	};
 
 	$scope.printData = () => {
 		let results = DataFactory.getData();
-		console.log("results", results[0]);
 		$scope.data = results;
 	};
 };
@@ -55,6 +53,7 @@ module.exports = function DataFactory ($q, $http) {
 
 	let tokenizer = new natural.WordTokenizer();
 
+	// Import the control data from storage.
 	let getJSON = () => {
 	    return $q((resolve, reject)=>{
 	        $http.get("../../psalms.json")
@@ -64,53 +63,64 @@ module.exports = function DataFactory ($q, $http) {
 	    });
 	};
 
-	let parseJSON = (string) => {
-		return new Promise((resolve, reject) => { 
-			// console.log("string at parse", string);
-			let keyArray = [];
-			for (var i = 0; i < (Object.keys(string.data.Psalms).length); i++) {
-				keyArray.push(Object.keys(string.data.Psalms[i]));
-			}
-			// console.log("keyArray", keyArray);
-			let sortedTokensArray = [];
-			for (i = 0; i < (string.data.Psalms).length; i++) {
-				let oneString = [];
-				oneString = string.data.Psalms[i][keyArray[i]];
-				let tokenizedString = tokenizer.tokenize(oneString.toLowerCase());
-				tokenizedString = stopWord.removeStopwords(tokenizedString);
-				let sortedTokens = tokenizedString.sort();
-				sortedTokensArray.push(sortedTokens);
-			}
-		console.log("sortedTokensArray", sortedTokensArray);
-		resolve(sortedTokensArray);
-		});
+	// Parse the dataObject passed from the async call above into a two-dimensional array 
+	// of alphabetized tokens, grouped by original document source. This will allow us 
+	// to iterate over the tokens to determine term frequency and inverse document frequency.
+	// We initialize two empty arrays on the global scope: one to hold the sorted keys and 
+	// one to hold the sorted tokens, both from the dataObject. This will allow us to access 
+	// the relevant data in this factory. We will pass the key array into the countTokens 
+	// function in order to append the name of the relevant document to each term. We access 
+	// the sorted tokens array within the countTokens function in order to count the tokens.
+	let keyArray = [];
+	let sortedTokensArray = [];
+	let parseJSON = (dataObject) => {
+		// Initialize an empty array to hold the data keys of the dataObject so that we
+		// can access each value/string in the dataObject.
+		// Loop through the dataObject, grab the keys, and push them into the array.
+		for (var i = 0; i < (Object.keys(dataObject.data.Psalms).length); i++) {
+			keyArray.push(Object.keys(dataObject.data.Psalms[i]));
+		}
+		// Loop through the data in the dataObject, grab each string, lowercase it, 
+		// tokenize it, remove all stopwords, and push them into an array.
+		for (i = 0; i < (dataObject.data.Psalms).length; i++) {
+			// Initialize a variable to hold each value of the dataObject as a single string
+			let oneString;
+			oneString = dataObject.data.Psalms[i][keyArray[i]];
+			// Lowercase each string, then tokenize it, pushing each token into an array.
+			let tokensArray = tokenizer.tokenize(oneString.toLowerCase());
+			// Remove all stop words from the array of tokens.
+			tokensArray = stopWord.removeStopwords(tokensArray).sort();
+			// Push the sorted tokensArray into an array.
+			sortedTokensArray.push(tokensArray);
+		}
 	};
 
-	let tokenizedStringsArray = [];
-	
-	let setData = (data) => {
-		tokenizedStringsArray = data;
-		console.log("tokenizedStringsArray at setData", tokenizedStringsArray);
-	};
-
-	let run = () => {
-		countTokens(tokenizedStringsArray);
-	};
-	
-	let countedTokensArray = [];
-
-	let countTokens = (tokenizedStringsArray) => {
-		console.log("tokenizedStringsArray at countTokens(): ", tokenizedStringsArray);
+	// Calculate the number of times each token appears in its document, create an object
+	// for each token, and append the relevant statistical data.
+	let countTokens = () => {
+		// Set the initial count value for each term.
 		let count = 0;
+		// Set the initial comparison token to null.
 		let currentToken = null;
+		// Initialize an array to hold arrays that contain each token object. Each array
+		// represents a document. The parent array will pass directly to the termFrequency 
+		// function.
 		var countedTokensArray = [];
-		for (var i = 0; i < tokenizedStringsArray.length; i++){
+		// Loop through the 2D array of sorted tokens, count each token, and create an object 
+		// for it.
+		for (var i = 0; i < sortedTokensArray.length; i++){
 			countedTokensArray[i] = [];
-			for (var j = 0; j < tokenizedStringsArray[i].length; j++) {
-				if (tokenizedStringsArray[i][j] !== currentToken && count > 0) {
+			for (var j = 0; j < sortedTokensArray[i].length; j++) {
+				// If a token does not equal its predecessor and the count is 0, the count 
+				// increases by one. If the current token equals its predecessor, the count
+				// increases by one. If the current token does not equal its predecessor, and 
+				// the count is at least one, this updates the current token, creates an object
+				// with the current-token-before-update and appends the relevant statistical
+				// data.
+				if (sortedTokensArray[i][j] !== currentToken && count > 0) {
 					let currentTokenObject = {};
-					// console.log(currentToken, "appears", count, "times");
-					currentToken = tokenizedStringsArray[i][j];
+					currentToken = sortedTokensArray[i][j];
+					currentTokenObject.document = keyArray[i][0];
 					currentTokenObject.word = currentToken;
 					currentTokenObject.count = count;
 					countedTokensArray[i].push(currentTokenObject);
@@ -120,26 +130,42 @@ module.exports = function DataFactory ($q, $http) {
 				}
 			}
 		}
-		console.log("countedTokensArray passed from countTokens:", countedTokensArray);
 		termFrequency(countedTokensArray);
 	};
-
-	let dataToOutput = [];
-	let setDataToOutput = function(data){
-		console.log("dataToOutput at set", data);
-		dataToOutput = data;
-	};
-// TAKE OBJECTS, CREATE ONE ARRAY, COUNT APPEARANCES OF ITEMS, WHICH GIVES DOCUMENT FREQUENCY
 	
-	let inverseDocumentFrequency = (countedTokensArray) => {
-		let newArray = [];
+	// Loop through the 2D array of counted tokens and divide the number of appearances of each
+	// term by the length of each document. This gives the normalized term frequency, which 
+	// we then append to the object within the countedTokensArray. Pass the countedTokensArray 
+	// to the inverseDocumentFrequency function. 
+	let termFrequency = function (countedTokensArray) {
 		for (var i = 0; i < countedTokensArray.length; i++) {
 			for (var j = 0; j < countedTokensArray[i].length; j++) {
-				newArray.push(countedTokensArray[i][j]);
+				let termFrequency = countedTokensArray[i][j].count/countedTokensArray[i].length;
+				countedTokensArray[i][j].termFrequency = termFrequency;
 			}
 		}
-		console.log("newArray", newArray);
-		let sortedArray = newArray.sort(function(a, b){
+		inverseDocumentFrequency(countedTokensArray);
+	};
+
+	// Set the document appearance of each term to 1. Then push all the terms into a single
+	// array and sort them alphabetically. Compare neighbors and add document appearance 
+	// numbers when neighbor words match. Set the numberOfDocs property of all duplicate
+	// words to the same number. Divide the number of documents by the numberofDocs property 
+	// and multiply by log10. This gives the inverse document frequency. Add this to each 
+	// object, then sort by the "document" property (or push the data to Firebase).
+	let inverseDocumentFrequency = (countedTokensArray) => {
+		// Initialize an array to hold the combined list of words.
+		let idfPrepArray = [];
+		// Loop through the arrays in the counted tokens array and push each word into one 
+		// array.
+		for (var i = 0; i < countedTokensArray.length; i++) {
+			for (var j = 0; j < countedTokensArray[i].length; j++){
+				// countedTokensArray[i][j].documentAppearance = 1;
+				idfPrepArray.push(countedTokensArray[i][j]);
+			}
+		}
+		// Sort the entire list of words alphabetically.
+		let sortedIdfPrepArray = idfPrepArray.sort(function(a, b){
 		    if (a.word < b.word) {
 			return - 1;
 			}
@@ -148,35 +174,53 @@ module.exports = function DataFactory ($q, $http) {
 			}
 			return 0;
 		});
+		// Determine how many documents contain each term. The recursive function 
+		// setNumberofDocs() takes the count set when a term's subsequent neighbor does not
+		// match. It uses that number to move backward through the array and assign the 
+		// docCount to each term object. The loop below the function determines the count
+		// and sets docCount to the count. We need two instances of that number because one
+		// determines how far to reach back in the array, and one remains stable as the 
+		// document frequency.
+		let setNumberOfDocs = function(count, docCount) {
+			if (count >= 0) {
+				sortedIdfPrepArray[(i-count)].documentFrequency = docCount;
+				return setNumberOfDocs(count - 1, docCount);
+			} else {
+				return count;
+			}
+		};
 		let count = 0;
 		let currentToken = null;
-		console.log("sorted Array", sortedArray);
-		for (i = 0; i < sortedArray.length; i++){
-			if (sortedArray[i].word !== currentToken && count > 0) {
-				currentToken = sortedArray[i].word;
-				sortedArray[i].idf = Math.log10(sortedArray.length/count);
+		for (i = 0; i < sortedIdfPrepArray.length; i++) {
+			if (sortedIdfPrepArray[i].word !== currentToken && count > 0) {
+				currentToken = sortedIdfPrepArray[i].word;
+				let docCount = count;
+				setNumberOfDocs(count, docCount);
 				count = 1;
 			} else {
 				count++;
 			}
 		}
-		console.log("sortedArray after count", sortedArray);
-		let b = [];
-		let a = [];
-		Array.prototype.unique = function() {
-		    for ( i = 0; i < this.length; i++ ) {
-		        var current = this[i].word;
-		        if (a.indexOf(current) < 0) {
-		        	a.push(current);
-		        	b.push(this[i]);
-		        }
-		    }
-		    return a;
+		// Here we set the inverse document frequency, which is the total number of documents
+		// divided by the document frequency and multiplied by log. On the use of log, see
+		// Manning, Raghavan, and Schütze, "Introduction to Information Retrieval," Cambridge 
+		// University Press, (2008), pg. 118. We get the total number of documents from 
+		// countedTokensArray.length, which is on the global scope. We need a new loop here 
+		// because the sortedIdfArray is modified in a function that resides outside the 
+		// prior loop. The final term is set outside, and indeed above, the prior loop. This
+		// operation represents the end of the data manipulation. 
+		for (i = 0; i < sortedIdfPrepArray.length; i++) {
+			sortedIdfPrepArray[i].inverseDocumentFrequency = 
+				Math.log(sortedTokensArray.length/sortedIdfPrepArray[i].documentFrequency);
+			sortedIdfPrepArray[i].tfIdf = sortedIdfPrepArray[i].inverseDocumentFrequency * 
+				sortedIdfPrepArray[i].termFrequency;
 		}
-		sortedArray.unique();
-    	console.log("a", a);
-    	console.log("b", b);
-    	setDataToOutput(b);
+		setDataToOutput(idfPrepArray);
+	};
+
+	let dataToOutput = [];
+	let setDataToOutput = function(data){
+		dataToOutput = data;
 	};
 
 	let getData = () => {
@@ -184,21 +228,8 @@ module.exports = function DataFactory ($q, $http) {
 		return dataToOutput;
 	};
 
-	let termFrequency = function (countedTokensArray) {
-		// console.log("countedTokensArray received at termFrequency():", countedTokensArray);
-		for (var i = 0; i < countedTokensArray.length; i++) {
-			for (var j = 0; j < countedTokensArray[i].length; j++) {
-				let termFrequency = countedTokensArray[i][j].count/countedTokensArray[i].length;
-				countedTokensArray[i][j].termFrequency = termFrequency;
-				// console.log("termFrequency", termFrequency);
-			}
-		}
-		// console.log("countedTokensArray at the end of termFrequency", countedTokensArray);
-		inverseDocumentFrequency(countedTokensArray);
-		// setDataToOutput(countedTokensArray);
-	};
 
-	return {getJSON, parseJSON, countTokens, setData, run, getData};
+	return {getJSON, parseJSON, countTokens, getData};
 };
 },{"../../lib/node_modules/natural/":30,"../../lib/node_modules/stopword/lib/stopword.js":148}],5:[function(require,module,exports){
 'use strict';
