@@ -1,6 +1,7 @@
 "use strict";
 
 module.exports = function($scope, DataFactory) {
+
 	//Import the control data. 
 	$scope.getData = () => {
 		DataFactory.getJSON().then(

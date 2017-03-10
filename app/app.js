@@ -7,11 +7,15 @@ require("../lib/node_modules/angular-route/angular-route.min.js");
 
 require("./factories/");
 require("./controllers/");
+require("./values/");
 
 app.config(function($routeProvider){
     $routeProvider.
     when('/', {
-        templateUrl: '../partials/partial.test.html',
+        templateUrl: '../partials/partial.rawData.html',
         controller: "dataCtrl"
+    }).
+    when('/UserInterface', {
+    	templateUrl: '../partials/partial.userInterface.html'
     });
 });
