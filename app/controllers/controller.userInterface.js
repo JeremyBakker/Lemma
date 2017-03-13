@@ -12,7 +12,7 @@ module.exports = function($scope, QueryFactory) {
 	};
 
 	$scope.displayData = () => {
-		console.log("$scope.data", $scope.data);
 		$scope.data = QueryFactory.getData();
+		console.log("$scope.data", $scope.data);
 	};
 };
