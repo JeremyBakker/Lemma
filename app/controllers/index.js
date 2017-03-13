@@ -3,4 +3,5 @@
 let angular = require("../../lib/node_modules/angular/"),
 	app = angular.module("religiousStruggle");
 
-app.controller('dataCtrl', require('./controller.rawData.js'));
+app.controller('dataCtrl', require('./controller.controlData.js'));
+app.controller('userInterface', require('./controller.userInterface.js'));
