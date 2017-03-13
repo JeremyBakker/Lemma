@@ -61,7 +61,7 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 		// Initialize an array to hold arrays that contain each token object. Each array
 		// represents a document. The parent array will pass directly to the termFrequency 
 		// function.
-		var countedTokensArray = [];
+		let countedTokensArray = [];
 		// Loop through the 2D array of sorted tokens, count each token, and create an object 
 		// for it.
 		for (var i = 0; i < sortedTokensArray.length; i++){
@@ -157,17 +157,15 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 				count++;
 			}
 		}
-		// Here we set the inverse document frequency, which is the total number of documents
-		// divided by the document frequency and multiplied by log. On the use of log, see
-		// Manning, Raghavan, and Schütze, "Introduction to Information Retrieval," Cambridge 
-		// University Press, (2008), pg. 118. We get the total number of documents from 
+		// Here we set the inverse document frequency, which is the log10 of the total number 
+		// of documents divided by the document frequency. We get the total number of documents from 
 		// sortedTokensArray.length, which is on the global scope. We need a new loop here 
 		// because the sortedIdfArray is modified in a function that resides outside the 
 		// prior loop. The final array is set outside, and indeed above, the prior loop. This
 		// operation represents the end of the data manipulation for this factory. 
 		for (i = 0; i < sortedIdfPrepArray.length; i++) {
 			sortedIdfPrepArray[i].inverseDocumentFrequency = 
-				Math.log(sortedTokensArray.length/sortedIdfPrepArray[i].documentFrequency);
+				1 + Math.log10(sortedTokensArray.length/sortedIdfPrepArray[i].documentFrequency);
 			sortedIdfPrepArray[i].tfIdf = sortedIdfPrepArray[i].inverseDocumentFrequency * 
 				sortedIdfPrepArray[i].termFrequency;
 		}
@@ -182,7 +180,7 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 	// the controller, then send it to Firebase. Log the key that Firebase gives the data.
 	let setDataToOutput = (data) => {
 		dataToOutput = data;
-		setFirebaseData(dataToOutput).then(
+		setControlData(dataToOutput).then(
 			(ObjectFromFirebase) => {
 				firebaseObjectKey = ObjectFromFirebase.data.name;
 				console.log("firebaseObjectKey returned: ", firebaseObjectKey);
@@ -192,20 +190,20 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 	// Get the hidden values from /values/firebaseCredentials.js that will allow us to 
 	// access Firebase.
 	let firebaseValues = firebaseCredentials.getfirebaseCredentials();
-	console.log("firebaseValues", firebaseValues);
 	// Send the data to Firebase.
-	let setFirebaseData = (dataToPost) => {
+	let setControlData = (dataToPost) => {
 		return $q((resolve, reject) => {
-			$http.post(`${firebaseValues.databaseURL}.json`,
+			$http.post(`${firebaseValues.databaseURL}/.json`,
 				angular.toJson(dataToPost))
 					.then(
 						(ObjectFromFirebase) => {
-							console.log("Here is my Firebase Object from setFirebaseData: ", ObjectFromFirebase);
+							console.log("Here is my Firebase Object from setControlData: ", ObjectFromFirebase);
 							resolve(ObjectFromFirebase);
 						})
 					.catch((error) => error);
 		});
 	};
+
 
 	// Create a function to make dataToOutput available to controllers.
 	let getData = () => {

@@ -16,6 +16,7 @@ app.config(function($routeProvider){
         controller: "dataCtrl"
     }).
     when('/UserInterface', {
-    	templateUrl: '../partials/partial.userInterface.html'
+    	templateUrl: '../partials/partial.userInterface.html',
+    	controller: 'userInterface'
     });
 });
