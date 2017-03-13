@@ -7,33 +7,38 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 
 	let tokenizer = new natural.WordTokenizer();
 
-	let countedQueryTokensArray = [];
+	// Define a global variable that will hold the query tokens entered and make them 
+	// accessible throughout this factory.
+	let originalQueryTokens;
 
+	// Define a global variable that will hold the parsed, counted query tokens as objects
+	// and make them available throughout this factory.
+	let countedQueryTokensArray
+
+	// Grab the query from the text input box in the userInterface partial, tokenize it, 
+	// lowercase the tokens, store the tokens in the global originalQueryTokens array, 
+	// remove the stop words, sort the remaining tokens, and push them into an array to be
+	// passed into the next function.
 	let setQuery = (queryReceived) => {
-	let query = queryReceived;	
-	console.log("query received at click", queryReceived);
-	// Parse the query data into individual tokens.
-	let tokensArray = tokenizer.tokenize(query.toLowerCase());
-	// Remove all stop words from the array of tokens.
-	tokensArray = stopWord.removeStopwords(tokensArray).sort();
-	// Push the sorted tokensArray into an array.
-	console.log("sorted tokens", tokensArray);
-	countTokens(tokensArray);
+		let query = queryReceived;	
+		console.log("query received at click", queryReceived);
+		// Parse the query data into individual tokens.
+		let tokensArray = tokenizer.tokenize(query.toLowerCase());
+		originalQueryTokens = tokensArray;
+		// Remove all stop words from the array of tokens.
+		tokensArray = stopWord.removeStopwords(tokensArray).sort();
+		// Push the sorted tokensArray into an array.
+		countTokens(tokensArray);
 	};
 
-	// Calculate the number of times each token appears in its document, create an object
-	// for each token, and append the relevant statistical data.
+	// Calculate the number of times each token appears in the query, create an object
+	// for each token, and append the count. Push each object into an array.
 	let countTokens = (tokensArray) => {
-		countedQueryTokensArray = [];
-		let count;
-		console.log("tokensArray received", tokensArray);
-		// Loop through the array of sorted tokens, count each token, and create an object 
-		// for it.
+		countedQueryTokensArray = []; // Clear the array for new searches.
+		let count = 1; // Every word appears at least once.
 		for (var i = 0; i < tokensArray.length; i++){
-			
 			if (tokensArray[i] !== tokensArray[i+1] || tokensArray.length === 1) {
 				let currentTokenObject = {};
-				count = 1;
 				currentTokenObject.document = "query";
 				currentTokenObject.word = tokensArray[i];
 				currentTokenObject.count = count;
@@ -44,17 +49,17 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 				count++;
 			}
 		}
-		console.log("countedQueryTokensArray", countedQueryTokensArray);
 		termFrequency(countedQueryTokensArray);
 	};
 	
 	// Loop through the array of counted tokens and divide the number of appearances of each
-	// term by the length of each document. This gives the normalized term frequency, which 
-	// we then append to the object within the countedQueryTokensArray. Pass the 
-	// countedQueryTokensArray to the inverseDocumentFrequency function. 
+	// term by the length of each document, which is set in the global originalQueryTokens
+	// arry. This gives the normalized term frequency, which we then append to the object 
+	// within the countedQueryTokensArray. Pass the countedQueryTokensArray to the 
+	// inverseDocumentFrequency function. 
 	let termFrequency = (countedQueryTokensArray) => {
 		for (var i = 0; i < countedQueryTokensArray.length; i++) {
-			let termFrequency = countedQueryTokensArray[i].count/countedQueryTokensArray.length;
+			let termFrequency = countedQueryTokensArray[i].count/originalQueryTokens.length;
 			countedQueryTokensArray[i].termFrequency = termFrequency;
 		}
 		idfQuery(countedQueryTokensArray);
@@ -62,7 +67,8 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 
 	let idfQuery = (countedQueryTokensArray) => {	
 		let queryPromises = [];
-		// loop through array, grab token and append it to search query. 
+		// Loop through the array of tokens and append create a Promise containing each 
+		// token. Wait for each Promise to resolve before proceeding.
 		for (var i = 0; i < countedQueryTokensArray.length; i++) {
 			let searchTerm = countedQueryTokensArray[i].word;
 			queryPromises.push(grabControlData(searchTerm));
@@ -75,11 +81,14 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 	// Get the hidden values from /values/firebaseCredentials.js that will allow us to 
 	// access Firebase.
 	let firebaseValues = firebaseCredentials.getfirebaseCredentials();
-	// Get the control data from Firebase, ordered by word. This will allow us to pull the 
-	// inverse document frequency for the query words.
+	// Get the control data from Firebase, ordered by token entered in the Promise function. 
+	// This will allow us to pull the stored inverse document frequency for the query words. 
+	// Pass the relevant query data to the getQueryKeys function via the Promise.all in the
+	// idfQuery function.
 	let grabControlData = (searchTerm) => {
 		return $q((resolve, reject) => {
-			$http.get(`${firebaseValues.databaseURL}/-KeuDJjQ45LivyeELPEQ.json?orderBy="word"&equalTo="${searchTerm}"`)
+			$http.get(`${firebaseValues.databaseURL}/-KeuDJjQ45LivyeELPEQ.json?orderBy=
+				"word"&equalTo="${searchTerm}"`)
 					.then(
 						(ObjectFromFirebase) => {
 							console.log("Here is my Firebase Object from grabControlData: ", ObjectFromFirebase);
@@ -89,96 +98,57 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 		});
 	};
 
+	// Get the keys for each query token that exists in the control data in order to access 
+	// the token's idf value. Terms that appear multiple times have multiple keys. Separate 
+	// the first key in each array to use for assigning the idf value.
 	let getQueryKeys = (firebaseControlData) => {
-		let queryKeys = [];
-		let idfKeys = [];
+		let controlIdfKeys = [];
+		let individualIdfKeys = [];
 		for (var i = 0; i < firebaseControlData.length; i++) {
 			let keys = Object.keys(firebaseControlData[i].data);
-			queryKeys.push(keys);
+			controlIdfKeys.push(keys);
 		}
-		console.log("queryKeys", queryKeys);
-		for (i = 0; i < queryKeys.length; i++) {
-			if (queryKeys[i] === undefined) {
-				idfKeys.push(queryKeys[i])
+		for (i = 0; i < controlIdfKeys.length; i++) {
+			if (controlIdfKeys[i] === undefined) {
+				individualIdfKeys.push(controlIdfKeys[i]);
 			} else {
-				idfKeys.push(queryKeys[i][0]);
+				individualIdfKeys.push(controlIdfKeys[i][0]);
 			}
-			// The Firebase search returns an empty array for the words in the query not in 
-			// the control dataset. This if statement removes the empty data.
-			console.log("idfKeys", idfKeys);
-			// if (queryKeys[i].length === 0) {
-			// 	idfKeys.pop();
-			// }
 		}
-		console.log("idfKeys at 118", idfKeys);
-		assignIdfValues(idfKeys, firebaseControlData);
+		assignIdfValues(individualIdfKeys, firebaseControlData);
 	};
 
-	let assignIdfValues = (idfKeys, firebaseControlData) => {
+	// Assign each token the idf values from the control set. If the query token does not 
+	// exist in the control set, create an object for it from the countedQueryTokens array.
+	// Push the amended objects into the queryArray. Pass that array to the 
+	// mergeQueryCountedIdf function.
+	let assignIdfValues = (individualIdfKeys, firebaseControlData) => {
 		let queryArray = [];
-		for (var i = 0; i < idfKeys.length; i++) {
-			let queryObject = {};
-			console.log("firebaseControlData", firebaseControlData);
-			console.log("idfKeys", idfKeys);
-			let controlObject = firebaseControlData[i].data[idfKeys[i]];
+		for (var i = 0; i < individualIdfKeys.length; i++) {
+			let	queryObject = countedQueryTokensArray[i]
+			console.log("queryObject", queryObject);
+			let controlObject = firebaseControlData[i].data[individualIdfKeys[i]];
 			if (controlObject === undefined) {
-				firebaseControlData.splice(i, 1);
-				idfKeys.splice(i, 1);
+				queryObject.inverseDocumentFrequency = 1/6 // TODO: Amend with dynamic data from control set.
 			} else {
-			queryObject.word = controlObject.word;
-			queryObject.inverseDocumentFrequency = controlObject.inverseDocumentFrequency;
+				queryObject.inverseDocumentFrequency = controlObject.inverseDocumentFrequency;
+			}
 			queryArray.push(queryObject);
-			}
 		}
-	console.log("queryArray", queryArray);
-	concatQueryCountedArrays(queryArray);
+	setTfIdf(queryArray);
 	};
 
-	let concatQueryCountedArrays = (queryArray) => {
-		let concatenatedQueryArray = countedQueryTokensArray.concat(queryArray);
-		let sortedConcatQueryArray = concatenatedQueryArray.sort(function(a, b){
-		    if (a.word < b.word) {
-			return - 1;
-			}
-			if (a.word > b.word) {
-			return + 1;
-			}
-			return 0;
-		});
-		mergeQueryCountedIdf(sortedConcatQueryArray);
+	let setTfIdf = (queryArray) => {
+		for (var i = 0; i < queryArray.length; i++) {
+			queryArray[i].tfIdf = queryArray[i].termFrequency * 
+				queryArray[i].inverseDocumentFrequency;
+			setData(queryArray);
+		}
 	};
-	
+
 	let finalArray = [];
-	let mergeQueryCountedIdf = (sortedConcatQueryArray) => {
-		console.log("sortedConcatQueryArray", sortedConcatQueryArray);
-		console.log("countedQueryTokensArray", countedQueryTokensArray);
-		for (var i = 0; i < sortedConcatQueryArray.length; i++) {
-			for (var j = 0; j < countedQueryTokensArray.length; j++) {
-				if (sortedConcatQueryArray[i].word === countedQueryTokensArray[j].word) {
-					countedQueryTokensArray[j].inverseDocumentFrequency = 
-						sortedConcatQueryArray[i].inverseDocumentFrequency;
-				}
-			}
-			finalArray.push(countedQueryTokensArray[i]);
-			console.log("finalArray", finalArray);
-		}
-		// let j = 1;
-		// for (var i = 0; i < countedQueryTokensArray.length; i++) {
-		// 	console.log("i", i);
-		// 	console.log("j", j);
-		// 	let idf = sortedConcatQueryArray[j].inverseDocumentFrequency;
-		// 	countedQueryTokensArray[i].inverseDocumentFrequency = idf;
-		// 	j = j + 2;
-		// 	finalArray.push(countedQueryTokensArray[i]);
-		// }
-		// queryTfIdf(finalArray);
-	};
-
-	let queryTfIdf = (finalArray) => {
-		for (var i = 0; i < finalArray.length; i++) {
-			finalArray[i].tfIdf = finalArray[i].termFrequency * 
-				finalArray[i].inverseDocumentFrequency;
-		}
+	let setData = (completedArray) => {
+		finalArray = completedArray;
 	};
 
 	// Create a function to make dataToOutput available to controllers.
