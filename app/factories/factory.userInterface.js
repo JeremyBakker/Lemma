@@ -1,6 +1,6 @@
 "use strict";
 
-module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
+module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStorageFactory) {
 
 	let natural = require('../../lib/node_modules/natural/'),
 		stopWord = require('../../lib/node_modules/stopword/lib/stopword.js');
@@ -13,7 +13,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 
 	// Define a global variable that will hold the parsed, counted query tokens as objects
 	// and make them available throughout this factory.
-	let countedQueryTokensArray
+	let countedQueryTokensArray;
 
 	// Grab the query from the text input box in the userInterface partial, tokenize it, 
 	// lowercase the tokens, store the tokens in the global originalQueryTokens array, 
@@ -59,7 +59,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 	// inverseDocumentFrequency function. 
 	let termFrequency = (countedQueryTokensArray) => {
 		for (var i = 0; i < countedQueryTokensArray.length; i++) {
-			let termFrequency = countedQueryTokensArray[i].count/originalQueryTokens.length;
+			let termFrequency = countedQueryTokensArray[i].count/countedQueryTokensArray.length;
 			countedQueryTokensArray[i].termFrequency = termFrequency;
 		}
 		idfQuery(countedQueryTokensArray);
@@ -87,7 +87,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 	// idfQuery function.
 	let grabControlData = (searchTerm) => {
 		return $q((resolve, reject) => {
-			$http.get(`${firebaseValues.databaseURL}/-KeuDJjQ45LivyeELPEQ.json?orderBy=
+			$http.get(`${firebaseValues.databaseURL}/-Kf9ia86v6B7l3NXPINY.json?orderBy=
 				"word"&equalTo="${searchTerm}"`)
 					.then(
 						(ObjectFromFirebase) => {
@@ -102,6 +102,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 	// the token's idf value. Terms that appear multiple times have multiple keys. Separate 
 	// the first key in each array to use for assigning the idf value.
 	let getQueryKeys = (firebaseControlData) => {
+		DataStorageFactory.setFirebaseData(firebaseControlData);
 		let controlIdfKeys = [];
 		let individualIdfKeys = [];
 		for (var i = 0; i < firebaseControlData.length; i++) {
@@ -124,17 +125,19 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 	// mergeQueryCountedIdf function.
 	let assignIdfValues = (individualIdfKeys, firebaseControlData) => {
 		let queryArray = [];
+		let controlArray = [];
 		for (var i = 0; i < individualIdfKeys.length; i++) {
-			let	queryObject = countedQueryTokensArray[i]
+			let	queryObject = countedQueryTokensArray[i];
 			console.log("queryObject", queryObject);
 			let controlObject = firebaseControlData[i].data[individualIdfKeys[i]];
 			if (controlObject === undefined) {
-				queryObject.inverseDocumentFrequency = 1/6 // TODO: Amend with dynamic data from control set.
+				queryObject.inverseDocumentFrequency = 1 + Math.log10(2/1); // TODO: Amend with dynamic data from control set.
 			} else {
 				queryObject.inverseDocumentFrequency = controlObject.inverseDocumentFrequency;
 			}
 			queryArray.push(queryObject);
 		}
+		console.log("queryArray", queryArray);
 	setTfIdf(queryArray);
 	};
 
@@ -142,6 +145,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 		for (var i = 0; i < queryArray.length; i++) {
 			queryArray[i].tfIdf = queryArray[i].termFrequency * 
 				queryArray[i].inverseDocumentFrequency;
+			DataStorageFactory.setData(queryArray);
 			setData(queryArray);
 		}
 	};
