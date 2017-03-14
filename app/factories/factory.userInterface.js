@@ -21,7 +21,6 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 	// passed into the next function.
 	let setQuery = (queryReceived) => {
 		let query = queryReceived;	
-		console.log("query received at click", queryReceived);
 		// Parse the query data into individual tokens.
 		let tokensArray = tokenizer.tokenize(query.toLowerCase());
 		originalQueryTokens = tokensArray;
@@ -59,7 +58,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 	// inverseDocumentFrequency function. 
 	let termFrequency = (countedQueryTokensArray) => {
 		for (var i = 0; i < countedQueryTokensArray.length; i++) {
-			let termFrequency = countedQueryTokensArray[i].count/countedQueryTokensArray.length;
+			let termFrequency = countedQueryTokensArray[i].count/originalQueryTokens.length;
 			countedQueryTokensArray[i].termFrequency = termFrequency;
 		}
 		idfQuery(countedQueryTokensArray);
@@ -87,7 +86,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 	// idfQuery function.
 	let grabControlData = (searchTerm) => {
 		return $q((resolve, reject) => {
-			$http.get(`${firebaseValues.databaseURL}/-Kf9ia86v6B7l3NXPINY.json?orderBy=
+			$http.get(`${firebaseValues.databaseURL}/-KfCv2MyovIbfC897sUC.json?orderBy=
 				"word"&equalTo="${searchTerm}"`)
 					.then(
 						(ObjectFromFirebase) => {
@@ -128,7 +127,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 		let controlArray = [];
 		for (var i = 0; i < individualIdfKeys.length; i++) {
 			let	queryObject = countedQueryTokensArray[i];
-			console.log("queryObject", queryObject);
+			// console.log("queryObject", queryObject);
 			let controlObject = firebaseControlData[i].data[individualIdfKeys[i]];
 			if (controlObject === undefined) {
 				queryObject.inverseDocumentFrequency = 1 + Math.log10(2/1); // TODO: Amend with dynamic data from control set.
@@ -137,7 +136,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 			}
 			queryArray.push(queryObject);
 		}
-		console.log("queryArray", queryArray);
+		// console.log("queryArray", queryArray);
 	setTfIdf(queryArray);
 	};
 

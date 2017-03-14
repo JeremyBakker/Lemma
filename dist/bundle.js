@@ -94,6 +94,8 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 
 	let tokenizer = new natural.WordTokenizer();
 
+	let originalTokensArray = [];
+
 	// Import the control data from storage.
 	let getJSON = () => {
 	    return $q((resolve, reject)=>{
@@ -131,6 +133,8 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 			oneString = dataObject.data.Psalms[i][keyArray[i]];
 			// Lowercase each string, then tokenize it, pushing each token into an array.
 			let tokensArray = tokenizer.tokenize(oneString.toLowerCase());
+			//
+			originalTokensArray.push(tokensArray);
 			// Remove all stop words from the array of tokens.
 			tokensArray = stopWord.removeStopwords(tokensArray).sort();
 			// Push the sorted tokensArray into an array.
@@ -142,32 +146,23 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 	// for each token, and append the relevant statistical data.
 	let countTokens = () => {
 		// Set the initial count value for each term.
-		let count = 0;
-		// Set the initial comparison token to null.
-		let currentToken = null;
-		// Initialize an array to hold arrays that contain each token object. Each array
-		// represents a document. The parent array will pass directly to the termFrequency 
-		// function.
+		let count = 1;
+		// Initialize a parent array to hold children arrays that contain each token object. 
+		// Each array represents a document. The parent array will pass directly to the 
+		// termFrequency function.
 		let countedTokensArray = [];
 		// Loop through the 2D array of sorted tokens, count each token, and create an object 
 		// for it.
 		for (var i = 0; i < sortedTokensArray.length; i++){
 			countedTokensArray[i] = [];
 			for (var j = 0; j < sortedTokensArray[i].length; j++) {
-				// If a token does not equal its predecessor and the count is 0, the count 
-				// increases by one. If the current token equals its predecessor, the count
-				// increases by one. If the current token does not equal its predecessor, and 
-				// the count is at least one, this updates the current token, creates an object
-				// with the current-token-before-update and appends the relevant statistical
-				// data.
-				if (sortedTokensArray[i][j] !== currentToken && count > 0) {
-					let currentTokenObject = {};
-					currentToken = sortedTokensArray[i][j];
-					currentTokenObject.document = keyArray[i][0];
-					currentTokenObject.word = currentToken;
-					currentTokenObject.count = count;
-					countedTokensArray[i].push(currentTokenObject);
-					count = 1;
+				if (sortedTokensArray[i][j] !== sortedTokensArray[i][j+1] || sortedTokensArray[i].length === 1) {
+				let currentTokenObject = {};
+				currentTokenObject.document = keyArray[i][0];
+				currentTokenObject.word = sortedTokensArray[i][j];
+				currentTokenObject.count = count;
+				countedTokensArray[i].push(currentTokenObject);
+				count = 1;
 				} else {
 					count++;
 				}
@@ -183,7 +178,7 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 	let termFrequency = (countedTokensArray) => {
 		for (var i = 0; i < countedTokensArray.length; i++) {
 			for (var j = 0; j < countedTokensArray[i].length; j++) {
-				let termFrequency = countedTokensArray[i][j].count/countedTokensArray[i].length;
+				let termFrequency = countedTokensArray[i][j].count/originalTokensArray[i].length;
 				countedTokensArray[i][j].termFrequency = termFrequency;
 			}
 		}
@@ -195,7 +190,7 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 	// numbers when neighbor words match. Set the numberOfDocs property of all duplicate
 	// words to the same number. Divide the number of documents by the numberofDocs property 
 	// and multiply by log10. This gives the inverse document frequency. Add this to each 
-	// object, then sort by the "document" property (or push the data to Firebase).
+	// object, then display the data and push the data to Firebase.
 	let inverseDocumentFrequency = (countedTokensArray) => {
 		// Initialize an array to hold the combined list of words.
 		let idfPrepArray = [];
@@ -306,9 +301,9 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 module.exports = function CosineFactory (DataStorageFactory) {
 	// TODO: push cosine similarity data from here to Firebase once uid functionality is set
 
+	let createIdfVectors = () => {
 	let queryArray = [];
 	let controlArray = [];
-	let createIdfVectors = () => {
 		let queryTfIdf;
 		let data = DataStorageFactory.getSetData();
 		let sumIdf = 0;
@@ -353,14 +348,17 @@ module.exports = function CosineFactory (DataStorageFactory) {
 			bDenominator += b[i] * b[i];
 		}
 		let cosineSimilarity = numerator/(Math.sqrt(aDenominator) * Math.sqrt(bDenominator));
-		console.log("cosineSimilarity", cosineSimilarity);
+		if (isNaN(cosineSimilarity)) {
+			console.log("There is no correlation between the query and the control data.");
+		} else {	
+			console.log("cosineSimilarity", cosineSimilarity);
+		}
 	};
 
 // [Definition: if a = (a1,a2,...,an) and b = (b1,b2,...,bn) then a.b = Sum(a1*b1 + a2*b2 + ... + an*bn) 
 // and ||a|| = sqrt(a1^2 + a2^2 + ... + an^2) and ||b|| = sqrt(b1^2 + b2^2 + ... + bn^2). ]
 	
 	let getData = () => {
-		console.log("getData at CosineFactory called");
 		createIdfVectors();
 	};
 
@@ -417,7 +415,6 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 	// passed into the next function.
 	let setQuery = (queryReceived) => {
 		let query = queryReceived;	
-		console.log("query received at click", queryReceived);
 		// Parse the query data into individual tokens.
 		let tokensArray = tokenizer.tokenize(query.toLowerCase());
 		originalQueryTokens = tokensArray;
@@ -455,7 +452,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 	// inverseDocumentFrequency function. 
 	let termFrequency = (countedQueryTokensArray) => {
 		for (var i = 0; i < countedQueryTokensArray.length; i++) {
-			let termFrequency = countedQueryTokensArray[i].count/countedQueryTokensArray.length;
+			let termFrequency = countedQueryTokensArray[i].count/originalQueryTokens.length;
 			countedQueryTokensArray[i].termFrequency = termFrequency;
 		}
 		idfQuery(countedQueryTokensArray);
@@ -483,7 +480,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 	// idfQuery function.
 	let grabControlData = (searchTerm) => {
 		return $q((resolve, reject) => {
-			$http.get(`${firebaseValues.databaseURL}/-Kf9ia86v6B7l3NXPINY.json?orderBy=
+			$http.get(`${firebaseValues.databaseURL}/-KfCv2MyovIbfC897sUC.json?orderBy=
 				"word"&equalTo="${searchTerm}"`)
 					.then(
 						(ObjectFromFirebase) => {
@@ -524,7 +521,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 		let controlArray = [];
 		for (var i = 0; i < individualIdfKeys.length; i++) {
 			let	queryObject = countedQueryTokensArray[i];
-			console.log("queryObject", queryObject);
+			// console.log("queryObject", queryObject);
 			let controlObject = firebaseControlData[i].data[individualIdfKeys[i]];
 			if (controlObject === undefined) {
 				queryObject.inverseDocumentFrequency = 1 + Math.log10(2/1); // TODO: Amend with dynamic data from control set.
@@ -533,7 +530,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 			}
 			queryArray.push(queryObject);
 		}
-		console.log("queryArray", queryArray);
+		// console.log("queryArray", queryArray);
 	setTfIdf(queryArray);
 	};
 
