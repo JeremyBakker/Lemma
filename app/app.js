@@ -17,6 +17,10 @@ app.config(function($routeProvider){
     }).
     when('/UserInterface', {
     	templateUrl: '../partials/partial.userInterface.html',
-    	controller: 'userInterface'
+    	controller: 'userInterfaceCtrl'
+    }).
+    when('/Chart/', {
+        templateUrl: '../partials/partial.chart.html',
+        controller: 'chartCtrl'
     });
 });

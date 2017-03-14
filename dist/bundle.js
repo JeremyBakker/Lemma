@@ -18,10 +18,25 @@ app.config(function($routeProvider){
     }).
     when('/UserInterface', {
     	templateUrl: '../partials/partial.userInterface.html',
-    	controller: 'userInterface'
+    	controller: 'userInterfaceCtrl'
+    }).
+    when('/Chart/', {
+        templateUrl: '../partials/partial.chart.html',
+        controller: 'chartCtrl'
     });
 });
-},{"../lib/node_modules/angular-route/angular-route.min.js":10,"../lib/node_modules/angular/":12,"./controllers/":4,"./factories/":7,"./values/":9}],2:[function(require,module,exports){
+},{"../lib/node_modules/angular-route/angular-route.min.js":13,"../lib/node_modules/angular/":15,"./controllers/":5,"./factories/":10,"./values/":12}],2:[function(require,module,exports){
+"use strict";
+
+module.exports = function($scope, CosineFactory) {
+	// TODO: set up this controller to pull data from Firebase based on uid
+	
+	$scope.showData = () => {
+		let results = CosineFactory.getData();
+		$scope.result = results;
+	};
+};
+},{}],3:[function(require,module,exports){
 "use strict";
 
 module.exports = function($scope, DataFactory) {
@@ -41,7 +56,7 @@ module.exports = function($scope, DataFactory) {
 		$scope.data = results;
 	};
 };
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 "use strict";
 
 module.exports = function($scope, QueryFactory) {
@@ -60,15 +75,16 @@ module.exports = function($scope, QueryFactory) {
 		console.log("$scope.data", $scope.data);
 	};
 };
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 
 let angular = require("../../lib/node_modules/angular/"),
 	app = angular.module("religiousStruggle");
 
 app.controller('dataCtrl', require('./controller.controlData.js'));
-app.controller('userInterface', require('./controller.userInterface.js'));
-},{"../../lib/node_modules/angular/":12,"./controller.controlData.js":2,"./controller.userInterface.js":3}],5:[function(require,module,exports){
+app.controller('userInterfaceCtrl', require('./controller.userInterface.js'));
+app.controller('chartCtrl', require('./controller.chart.js'));
+},{"../../lib/node_modules/angular/":15,"./controller.chart.js":2,"./controller.controlData.js":3,"./controller.userInterface.js":4}],6:[function(require,module,exports){
 "use strict";
 
 module.exports = function DataFactory ($q, $http, firebaseCredentials) {
@@ -284,10 +300,103 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 
 	return {getJSON, parseJSON, countTokens, getData};
 };
-},{"../../lib/node_modules/natural/":34,"../../lib/node_modules/stopword/lib/stopword.js":152}],6:[function(require,module,exports){
+},{"../../lib/node_modules/natural/":37,"../../lib/node_modules/stopword/lib/stopword.js":155}],7:[function(require,module,exports){
 "use strict";
 
-module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
+module.exports = function CosineFactory (DataStorageFactory) {
+	// TODO: push cosine similarity data from here to Firebase once uid functionality is set
+
+	let queryArray = [];
+	let controlArray = [];
+	let createIdfVectors = () => {
+		let queryTfIdf;
+		let data = DataStorageFactory.getSetData();
+		let sumIdf = 0;
+		let	calculateMultiple = (n, i) => {
+			if (n > 0) {
+				let keys = Object.keys(data.setFirebaseControlData[i].data);
+				sumIdf += data.setFirebaseControlData[i].data[keys[n-1]].tfIdf;
+				return calculateMultiple(n-1, i);
+			}
+		};
+		for (var i = 0; i < data.queryArray.length; i++) {
+			queryTfIdf = data.queryArray[i].tfIdf;
+			queryArray.push(queryTfIdf);
+		}
+		for (i = 0; i < data.setFirebaseControlData.length; i++) {
+			let keys = Object.keys(data.setFirebaseControlData[i].data);
+			let controlTfIdf;	
+			if (keys.length === 0) {
+				controlTfIdf = 0;
+			}
+			else if (keys.length > 1) {
+				let n = keys.length;
+				calculateMultiple(n, i);
+				controlTfIdf = sumIdf/keys.length;
+			} else {
+				controlTfIdf = 	data.setFirebaseControlData[i].data[keys[0]].tfIdf;
+			}
+			controlArray.push(controlTfIdf);
+		}
+			console.log("queryArray", queryArray);
+			console.log("controlArray", controlArray);
+			calculateCosine(queryArray, controlArray);
+	};
+
+	let calculateCosine = (a, b) => {
+		let numerator = 0;
+		let aDenominator = 0;
+		let bDenominator = 0;
+		for (var i = 0; i < a.length; i++) {
+			numerator += a[i] * b[i];
+			aDenominator += a[i] * a[i];
+			bDenominator += b[i] * b[i];
+		}
+		let cosineSimilarity = numerator/(Math.sqrt(aDenominator) * Math.sqrt(bDenominator));
+		console.log("cosineSimilarity", cosineSimilarity);
+	};
+
+// [Definition: if a = (a1,a2,...,an) and b = (b1,b2,...,bn) then a.b = Sum(a1*b1 + a2*b2 + ... + an*bn) 
+// and ||a|| = sqrt(a1^2 + a2^2 + ... + an^2) and ||b|| = sqrt(b1^2 + b2^2 + ... + bn^2). ]
+	
+	let getData = () => {
+		console.log("getData at CosineFactory called");
+		createIdfVectors();
+	};
+
+	return {createIdfVectors, calculateCosine, getData};
+
+};
+
+
+},{}],8:[function(require,module,exports){
+"use strict";
+
+module.exports = function DataStorageFactory ($q, $http, firebaseCredentials) {
+
+	let setQueryArray = [];
+	let setData = (queryArray) => {
+		setQueryArray = queryArray; 
+	};
+
+	let setFirebaseControlData = [];
+	let setFirebaseData = (firebaseControlData) => {
+		setFirebaseControlData = firebaseControlData;
+		console.log("setFirebaseControlData at set", setFirebaseControlData);
+	};
+
+	let getSetData = () => {
+		return {
+				"queryArray": setQueryArray,
+				"setFirebaseControlData": setFirebaseControlData};
+	};
+
+	return {setData, getSetData, setFirebaseData};
+};
+},{}],9:[function(require,module,exports){
+"use strict";
+
+module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStorageFactory) {
 
 	let natural = require('../../lib/node_modules/natural/'),
 		stopWord = require('../../lib/node_modules/stopword/lib/stopword.js');
@@ -300,7 +409,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 
 	// Define a global variable that will hold the parsed, counted query tokens as objects
 	// and make them available throughout this factory.
-	let countedQueryTokensArray
+	let countedQueryTokensArray;
 
 	// Grab the query from the text input box in the userInterface partial, tokenize it, 
 	// lowercase the tokens, store the tokens in the global originalQueryTokens array, 
@@ -346,7 +455,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 	// inverseDocumentFrequency function. 
 	let termFrequency = (countedQueryTokensArray) => {
 		for (var i = 0; i < countedQueryTokensArray.length; i++) {
-			let termFrequency = countedQueryTokensArray[i].count/originalQueryTokens.length;
+			let termFrequency = countedQueryTokensArray[i].count/countedQueryTokensArray.length;
 			countedQueryTokensArray[i].termFrequency = termFrequency;
 		}
 		idfQuery(countedQueryTokensArray);
@@ -374,7 +483,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 	// idfQuery function.
 	let grabControlData = (searchTerm) => {
 		return $q((resolve, reject) => {
-			$http.get(`${firebaseValues.databaseURL}/-KeuDJjQ45LivyeELPEQ.json?orderBy=
+			$http.get(`${firebaseValues.databaseURL}/-Kf9ia86v6B7l3NXPINY.json?orderBy=
 				"word"&equalTo="${searchTerm}"`)
 					.then(
 						(ObjectFromFirebase) => {
@@ -389,6 +498,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 	// the token's idf value. Terms that appear multiple times have multiple keys. Separate 
 	// the first key in each array to use for assigning the idf value.
 	let getQueryKeys = (firebaseControlData) => {
+		DataStorageFactory.setFirebaseData(firebaseControlData);
 		let controlIdfKeys = [];
 		let individualIdfKeys = [];
 		for (var i = 0; i < firebaseControlData.length; i++) {
@@ -411,17 +521,19 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 	// mergeQueryCountedIdf function.
 	let assignIdfValues = (individualIdfKeys, firebaseControlData) => {
 		let queryArray = [];
+		let controlArray = [];
 		for (var i = 0; i < individualIdfKeys.length; i++) {
-			let	queryObject = countedQueryTokensArray[i]
+			let	queryObject = countedQueryTokensArray[i];
 			console.log("queryObject", queryObject);
 			let controlObject = firebaseControlData[i].data[individualIdfKeys[i]];
 			if (controlObject === undefined) {
-				queryObject.inverseDocumentFrequency = 1/6 // TODO: Amend with dynamic data from control set.
+				queryObject.inverseDocumentFrequency = 1 + Math.log10(2/1); // TODO: Amend with dynamic data from control set.
 			} else {
 				queryObject.inverseDocumentFrequency = controlObject.inverseDocumentFrequency;
 			}
 			queryArray.push(queryObject);
 		}
+		console.log("queryArray", queryArray);
 	setTfIdf(queryArray);
 	};
 
@@ -429,6 +541,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 		for (var i = 0; i < queryArray.length; i++) {
 			queryArray[i].tfIdf = queryArray[i].termFrequency * 
 				queryArray[i].inverseDocumentFrequency;
+			DataStorageFactory.setData(queryArray);
 			setData(queryArray);
 		}
 	};
@@ -447,7 +560,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials) {
 
 	return {setQuery, grabControlData, getData};
 };
-},{"../../lib/node_modules/natural/":34,"../../lib/node_modules/stopword/lib/stopword.js":152}],7:[function(require,module,exports){
+},{"../../lib/node_modules/natural/":37,"../../lib/node_modules/stopword/lib/stopword.js":155}],10:[function(require,module,exports){
 'use strict';
 
 let angular = require("../../lib/node_modules/angular/"),
@@ -455,7 +568,9 @@ let angular = require("../../lib/node_modules/angular/"),
 
 app.factory('DataFactory', require('./factory.controlData.js'));
 app.factory('QueryFactory', require('./factory.userInterface.js'));
-},{"../../lib/node_modules/angular/":12,"./factory.controlData.js":5,"./factory.userInterface.js":6}],8:[function(require,module,exports){
+app.factory('DataStorageFactory', require('./factory.dataStorage.js'));
+app.factory('CosineFactory', require('./factory.cosine.js'));
+},{"../../lib/node_modules/angular/":15,"./factory.controlData.js":6,"./factory.cosine.js":7,"./factory.dataStorage.js":8,"./factory.userInterface.js":9}],11:[function(require,module,exports){
 "use strict";
 
 module.exports = function firebaseCredentials() {
@@ -470,14 +585,14 @@ module.exports = function firebaseCredentials() {
     	};
    	return {firebaseCredentials, getfirebaseCredentials};
 };
-},{}],9:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 let angular = require("../../lib/node_modules/angular/"),
 	app = angular.module("religiousStruggle");
 
 app.factory('firebaseCredentials', require('./firebaseCredentials.js'));
-},{"../../lib/node_modules/angular/":12,"./firebaseCredentials.js":8}],10:[function(require,module,exports){
+},{"../../lib/node_modules/angular/":15,"./firebaseCredentials.js":11}],13:[function(require,module,exports){
 /*
  AngularJS v1.6.2
  (c) 2010-2017 Google, Inc. http://angularjs.org
@@ -496,7 +611,7 @@ c.push(b[f]);c.push(e[2]||"");delete b[f]}});return c.join("")}var D=!1,s,y,q={r
 return q}]}).run(A),I=d.$$minErr("ngRoute"),k;A.$inject=["$injector"];z.provider("$routeParams",function(){this.$get=function(){return{}}});z.directive("ngView",B);z.directive("ngView",C);B.$inject=["$route","$anchorScroll","$animate"];C.$inject=["$compile","$controller","$route"]})(window,window.angular);
 
 
-},{}],11:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /**
  * @license AngularJS v1.6.2
  * (c) 2010-2017 Google, Inc. http://angularjs.org
@@ -33631,11 +33746,11 @@ $provide.value("$locale", {
 })(window);
 
 !window.angular.$$csp().noInlineStyle && window.angular.element(document.head).prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\\:form{display:block;}.ng-animate-shim{visibility:hidden;}.ng-anchor{position:absolute;}</style>');
-},{}],12:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 require('./angular');
 module.exports = angular;
 
-},{"./angular":11}],13:[function(require,module,exports){
+},{"./angular":14}],16:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -34129,7 +34244,7 @@ var objectKeys = Object.keys || function (obj) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"util/":169}],14:[function(require,module,exports){
+},{"util/":172}],17:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -34245,9 +34360,9 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],15:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 
-},{}],16:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -36040,7 +36155,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":14,"ieee754":18,"isarray":20}],17:[function(require,module,exports){
+},{"base64-js":17,"ieee754":21,"isarray":23}],20:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -36344,7 +36459,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],18:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -36430,7 +36545,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],19:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -36453,14 +36568,14 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],20:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],21:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /*
 Copyright (c) 2011, Rob Ellis, Chris Umbel
 
@@ -36638,7 +36753,7 @@ Sentences.prototype.type = function(callback) {
 
 module.exports = Sentences;
 
-},{"underscore":148}],22:[function(require,module,exports){
+},{"underscore":151}],25:[function(require,module,exports){
 /*
     Brill's POS Tagger
     Copyright (C) 2016 Hugo W.L. ter Doest
@@ -36691,7 +36806,7 @@ function Brill_POS_Tagger(lexicon, ruleSet) {
 
 module.exports = Brill_POS_Tagger;
 
-},{"./TF_Parser":26,"fs":15}],23:[function(require,module,exports){
+},{"./TF_Parser":29,"fs":18}],26:[function(require,module,exports){
 /*
    Lexicon class
    Copyright (C) 2016 Hugo W.L. ter Doest
@@ -36765,7 +36880,7 @@ Lexicon.prototype.tagWord = function(word) {
 
 module.exports = Lexicon;
 
-},{"fs":15}],24:[function(require,module,exports){
+},{"fs":18}],27:[function(require,module,exports){
 /*
     Predicates for the Brill tagger
     Copyright (C) 2015 Hugo W.L. ter Doest
@@ -37172,7 +37287,7 @@ Predicate.prototype.evaluate = function(tagged_sentence, position) {
 };
 
 module.exports = Predicate;
-},{}],25:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /*
    Set of transformation rules
    Copyright (C) 2016 Hugo W.L. ter Doest
@@ -37211,7 +37326,7 @@ function RuleSet(filename) {
 
 module.exports = RuleSet;
 
-},{"./TF_Parser":26,"fs":15}],26:[function(require,module,exports){
+},{"./TF_Parser":29,"fs":18}],29:[function(require,module,exports){
 module.exports = (function() {
   /*
    * Generated by PEG.js 0.8.0.
@@ -37930,7 +38045,7 @@ module.exports = (function() {
   };
 })();
 
-},{"./TransformationRule":27}],27:[function(require,module,exports){
+},{"./TransformationRule":30}],30:[function(require,module,exports){
 /*
     Transformation rules for the Brill tagger
     Copyright (C) 2015 Hugo W.L. ter Doest
@@ -37975,7 +38090,7 @@ TransformationRule.prototype.apply = function(tagged_sentence, position) {
 
 module.exports = TransformationRule;
   
-},{"./Predicate":24}],28:[function(require,module,exports){
+},{"./Predicate":27}],31:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -38036,7 +38151,7 @@ BayesClassifier.load = load;
 
 module.exports = BayesClassifier;
 
-},{"./classifier":29,"apparatus":118,"util":169}],29:[function(require,module,exports){
+},{"./classifier":32,"apparatus":121,"util":172}],32:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -38215,7 +38330,7 @@ Classifier.load = load;
 
 module.exports = Classifier;
 
-},{"../stemmers/porter_stemmer":56,"events":17,"fs":15,"util":169}],30:[function(require,module,exports){
+},{"../stemmers/porter_stemmer":59,"events":20,"fs":18,"util":172}],33:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -38281,7 +38396,7 @@ LogisticRegressionClassifier.load = load;
 
 module.exports = LogisticRegressionClassifier;
 
-},{"./classifier":29,"apparatus":118,"util":169}],31:[function(require,module,exports){
+},{"./classifier":32,"apparatus":121,"util":172}],34:[function(require,module,exports){
 /*
 Copyright (c) 2011, John Crepezzi, Chris Umbel
 
@@ -38362,7 +38477,7 @@ var compare = function (str1, str2) {
 
 module.exports = compare;
 
-},{}],32:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 /*
 Copyright (c) 2012, Adam Phillabaum, Chris Umbel
 
@@ -38480,7 +38595,7 @@ function JaroWinklerDistance(s1, s2, dj) {
 }
 module.exports = JaroWinklerDistance;
 
-},{}],33:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 /*
 Copyright (c) 2012, Sid Nallu, Chris Umbel
 
@@ -38550,7 +38665,7 @@ function LevenshteinDistance (source, target, options) {
 
 module.exports = LevenshteinDistance;
 
-},{}],34:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -38637,7 +38752,7 @@ exports.RuleSet = require('./brill_pos_tagger/lib/RuleSet');
 
 
 
-},{"./analyzers/sentence_analyzer":21,"./brill_pos_tagger/lib/Brill_POS_Tagger":22,"./brill_pos_tagger/lib/Lexicon":23,"./brill_pos_tagger/lib/RuleSet":25,"./classifiers/bayes_classifier":28,"./classifiers/logistic_regression_classifier":30,"./distance/dice_coefficient":31,"./distance/jaro-winkler_distance":32,"./distance/levenshtein_distance":33,"./inflectors/count_inflector":35,"./inflectors/fr/noun_inflector":37,"./inflectors/ja/noun_inflector":38,"./inflectors/noun_inflector":39,"./inflectors/present_verb_inflector":40,"./ngrams/ngrams":42,"./ngrams/ngrams_zh":43,"./normalizers/normalizer":44,"./normalizers/normalizer_ja":45,"./normalizers/remove_diacritics":47,"./phonetics/dm_soundex":48,"./phonetics/double_metaphone":49,"./phonetics/metaphone":50,"./phonetics/soundex":52,"./spellcheck/spellcheck":53,"./stemmers/lancaster_stemmer":55,"./stemmers/porter_stemmer":56,"./stemmers/porter_stemmer_es":57,"./stemmers/porter_stemmer_fa":58,"./stemmers/porter_stemmer_fr":59,"./stemmers/porter_stemmer_it":60,"./stemmers/porter_stemmer_no":61,"./stemmers/porter_stemmer_pt":62,"./stemmers/porter_stemmer_ru":63,"./stemmers/stemmer_fr":67,"./stemmers/stemmer_ja":69,"./stemmers/stemmer_pl":71,"./tfidf/tfidf":75,"./tokenizers/aggressive_tokenizer":76,"./tokenizers/aggressive_tokenizer_es":77,"./tokenizers/aggressive_tokenizer_fa":78,"./tokenizers/aggressive_tokenizer_fr":79,"./tokenizers/aggressive_tokenizer_it":80,"./tokenizers/aggressive_tokenizer_nl":81,"./tokenizers/aggressive_tokenizer_no":82,"./tokenizers/aggressive_tokenizer_pl":83,"./tokenizers/aggressive_tokenizer_pt":84,"./tokenizers/aggressive_tokenizer_ru":85,"./tokenizers/regexp_tokenizer":86,"./tokenizers/sentence_tokenizer":87,"./tokenizers/tokenizer_case":89,"./tokenizers/tokenizer_ja":90,"./tokenizers/treebank_word_tokenizer":91,"./transliterators/ja":92,"./trie/trie":93,"./util/edge_weighted_digraph":95,"./util/longest_path_tree":96,"./util/shortest_path_tree":97,"./util/stopwords":98,"./wordnet/wordnet":112}],35:[function(require,module,exports){
+},{"./analyzers/sentence_analyzer":24,"./brill_pos_tagger/lib/Brill_POS_Tagger":25,"./brill_pos_tagger/lib/Lexicon":26,"./brill_pos_tagger/lib/RuleSet":28,"./classifiers/bayes_classifier":31,"./classifiers/logistic_regression_classifier":33,"./distance/dice_coefficient":34,"./distance/jaro-winkler_distance":35,"./distance/levenshtein_distance":36,"./inflectors/count_inflector":38,"./inflectors/fr/noun_inflector":40,"./inflectors/ja/noun_inflector":41,"./inflectors/noun_inflector":42,"./inflectors/present_verb_inflector":43,"./ngrams/ngrams":45,"./ngrams/ngrams_zh":46,"./normalizers/normalizer":47,"./normalizers/normalizer_ja":48,"./normalizers/remove_diacritics":50,"./phonetics/dm_soundex":51,"./phonetics/double_metaphone":52,"./phonetics/metaphone":53,"./phonetics/soundex":55,"./spellcheck/spellcheck":56,"./stemmers/lancaster_stemmer":58,"./stemmers/porter_stemmer":59,"./stemmers/porter_stemmer_es":60,"./stemmers/porter_stemmer_fa":61,"./stemmers/porter_stemmer_fr":62,"./stemmers/porter_stemmer_it":63,"./stemmers/porter_stemmer_no":64,"./stemmers/porter_stemmer_pt":65,"./stemmers/porter_stemmer_ru":66,"./stemmers/stemmer_fr":70,"./stemmers/stemmer_ja":72,"./stemmers/stemmer_pl":74,"./tfidf/tfidf":78,"./tokenizers/aggressive_tokenizer":79,"./tokenizers/aggressive_tokenizer_es":80,"./tokenizers/aggressive_tokenizer_fa":81,"./tokenizers/aggressive_tokenizer_fr":82,"./tokenizers/aggressive_tokenizer_it":83,"./tokenizers/aggressive_tokenizer_nl":84,"./tokenizers/aggressive_tokenizer_no":85,"./tokenizers/aggressive_tokenizer_pl":86,"./tokenizers/aggressive_tokenizer_pt":87,"./tokenizers/aggressive_tokenizer_ru":88,"./tokenizers/regexp_tokenizer":89,"./tokenizers/sentence_tokenizer":90,"./tokenizers/tokenizer_case":92,"./tokenizers/tokenizer_ja":93,"./tokenizers/treebank_word_tokenizer":94,"./transliterators/ja":95,"./trie/trie":96,"./util/edge_weighted_digraph":98,"./util/longest_path_tree":99,"./util/shortest_path_tree":100,"./util/stopwords":101,"./wordnet/wordnet":115}],38:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -38693,7 +38808,7 @@ CountInflector.nth = nth;
 
 module.exports = CountInflector;
 
-},{}],36:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -38723,7 +38838,7 @@ var FormSet = function() {
 
 module.exports = FormSet;
 
-},{}],37:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 /*
  Copyright (c) 2012, Guillaume Marty
 
@@ -38960,7 +39075,7 @@ util.inherits(NounInflector, SingularPluralInflector);
 
 module.exports = NounInflector;
 
-},{"../form_set":36,"../singular_plural_inflector":41,"util":169}],38:[function(require,module,exports){
+},{"../form_set":39,"../singular_plural_inflector":44,"util":172}],41:[function(require,module,exports){
 /*
  Copyright (c) 2012, Guillaume Marty
 
@@ -39097,7 +39212,7 @@ util.inherits(NounInflector, SingularPluralInflector);
 
 module.exports = NounInflector;
 
-},{"../form_set":36,"../singular_plural_inflector":41,"util":169}],39:[function(require,module,exports){
+},{"../form_set":39,"../singular_plural_inflector":44,"util":172}],42:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -39206,7 +39321,7 @@ util.inherits(NounInflector, SingularPluralInflector);
     
 module.exports = NounInflector;
 
-},{"./form_set":36,"./singular_plural_inflector":41,"util":169}],40:[function(require,module,exports){
+},{"./form_set":39,"./singular_plural_inflector":44,"util":172}],43:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -39283,7 +39398,7 @@ util.inherits(VerbInflector, SingularPluralInflector);
 
 module.exports = VerbInflector;
 
-},{"./form_set":36,"./singular_plural_inflector":41,"util":169}],41:[function(require,module,exports){
+},{"./form_set":39,"./singular_plural_inflector":44,"util":172}],44:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -39394,7 +39509,7 @@ TenseInflector.prototype.izeRegExps = function(token, forms) {
 
 module.exports = TenseInflector;
 
-},{}],42:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 /*
 Copyright (c) 2011, Rob Ellis, Chris Umbel
 
@@ -39491,7 +39606,7 @@ var ngrams = function(sequence, n, startSymbol, endSymbol) {
 }
 
 
-},{"../tokenizers/regexp_tokenizer":86,"underscore":148}],43:[function(require,module,exports){
+},{"../tokenizers/regexp_tokenizer":89,"underscore":151}],46:[function(require,module,exports){
 /*
 Copyright (c) 2014, Lee Wenzhu
 
@@ -39576,7 +39691,7 @@ var ngrams = function(sequence, n, startSymbol, endSymbol) {
 };
 
 
-},{"underscore":148}],44:[function(require,module,exports){
+},{"underscore":151}],47:[function(require,module,exports){
 /*
  Copyright (c) 2013, Kenneth Koch
 
@@ -39673,7 +39788,7 @@ exports.normalize_tokens = normalize_tokens;
 
 
 
-},{"../util/utils":109}],45:[function(require,module,exports){
+},{"../util/utils":112}],48:[function(require,module,exports){
 /*
  Copyright (c) 2012, Guillaume Marty
 
@@ -40299,7 +40414,7 @@ var normalize_ja = function(str) {
 exports.normalize_ja = normalize_ja;
 exports.converters = converters;
 
-},{"../util/utils":109,"../util/utils.js":109}],46:[function(require,module,exports){
+},{"../util/utils":112,"../util/utils.js":112}],49:[function(require,module,exports){
 /*
  Copyright (c) 2014, Kristoffer Brabrand
 
@@ -40359,7 +40474,7 @@ var remove_diacritics = function(text) {
 
 // export the relevant stuff.
 exports.remove_diacritics = remove_diacritics;
-},{}],47:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 /*
  Copyright (c) 2012, Alexy Maslennikov
 
@@ -40484,7 +40599,7 @@ module.exports = function(str) {
 	return str;
 };
 
-},{}],48:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 /*
 Copyright (c) 2012, Alexy Maslenninkov
 
@@ -40733,7 +40848,7 @@ soundex.process = process;
 module.exports = soundex;
 
 
-},{"./phonetic":51}],49:[function(require,module,exports){
+},{"./phonetic":54}],52:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -41246,7 +41361,7 @@ DoubleMetaphone.compare = compare
 DoubleMetaphone.process = process;
 DoubleMetaphone.isVowel = isVowel;
 
-},{"./phonetic":51}],50:[function(require,module,exports){
+},{"./phonetic":54}],53:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -41440,7 +41555,7 @@ Metaphone.dropY = dropY;
 Metaphone.transformZ = transformZ;
 Metaphone.dropVowels = dropVowels;
 
-},{"./phonetic":51}],51:[function(require,module,exports){
+},{"./phonetic":54}],54:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -41496,7 +41611,7 @@ module.exports = function() {
     };
 };
 
-},{"../tokenizers/aggressive_tokenizer":76,"../util/stopwords":98}],52:[function(require,module,exports){
+},{"../tokenizers/aggressive_tokenizer":79,"../util/stopwords":101}],55:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -41582,7 +41697,7 @@ SoundEx.transformR = transformR;
 SoundEx.condense = condense;
 SoundEx.padRight0 = padRight0;
 
-},{"./phonetic":51}],53:[function(require,module,exports){
+},{"./phonetic":54}],56:[function(require,module,exports){
 
 var Trie = require('../trie/trie');
 
@@ -41664,7 +41779,7 @@ Spellcheck.prototype.editsWithMaxDistanceHelper = function(distanceCounter, dist
 
 module.exports = Spellcheck;
 
-},{"../trie/trie":93}],54:[function(require,module,exports){
+},{"../trie/trie":96}],57:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -42456,7 +42571,7 @@ exports.rules = {
 };
 
 
-},{}],55:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -42532,7 +42647,7 @@ module.exports = LancasterStemmer;
 LancasterStemmer.stem = function(token) {
     return applyRuleSection(token.toLowerCase(), true);
 }
-},{"./lancaster_rules":54,"./stemmer":64}],56:[function(require,module,exports){
+},{"./lancaster_rules":57,"./stemmer":67}],59:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -42767,7 +42882,7 @@ PorterStemmer.step4 = step4;
 PorterStemmer.step5a = step5a;
 PorterStemmer.step5b = step5b;
 
-},{"./stemmer":64}],57:[function(require,module,exports){
+},{"./stemmer":67}],60:[function(require,module,exports){
 /*
 Copyright (c) 2012, David Przybilla, Chris Umbel
 
@@ -42990,7 +43105,7 @@ PorterStemmer.stem = function(token) {
 
 };
 
-},{"./stemmer_es":65}],58:[function(require,module,exports){
+},{"./stemmer_es":68}],61:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 Farsi Porter Stemmer by Fardin Koochaki <me@fardinak.com>
@@ -43024,7 +43139,7 @@ module.exports = PorterStemmer;
 PorterStemmer.stem = function(token) {
     return token;
 };
-},{"./stemmer_fa":66}],59:[function(require,module,exports){
+},{"./stemmer_fa":69}],62:[function(require,module,exports){
 'use strict';
 
 /*
@@ -43402,7 +43517,7 @@ function endsin(token, suffix) {
   if (token.length < suffix.length) return false;
   return (token.slice(-suffix.length) == suffix);
 };
-},{"./stemmer_fr":67}],60:[function(require,module,exports){
+},{"./stemmer_fr":70}],63:[function(require,module,exports){
 /*
 Copyright (c) 2012, Leonardo Fenu, Chris Umbel
 
@@ -43636,7 +43751,7 @@ PorterStemmer.stem = function(token) {
 	return token.toLowerCase();
 
 };
-},{"./stemmer_it":68}],61:[function(require,module,exports){
+},{"./stemmer_it":71}],64:[function(require,module,exports){
 /*
 Copyright (c) 2014, Kristoffer Brabrand
 
@@ -43792,7 +43907,7 @@ PorterStemmer.step1b = step1b;
 PorterStemmer.step1c = step1c;
 PorterStemmer.step2  = step2;
 PorterStemmer.step3  = step3;
-},{"./stemmer_no":70}],62:[function(require,module,exports){
+},{"./stemmer_no":73}],65:[function(require,module,exports){
 /*
 Copyright (c) 2015, Luís Rodrigues
 
@@ -44096,7 +44211,7 @@ module.exports = (function () {
   return PorterStemmer;
 })();
 
-},{"./stemmer_pt":72,"./token":74}],63:[function(require,module,exports){
+},{"./stemmer_pt":75,"./token":77}],66:[function(require,module,exports){
 /*
 Copyright (c) 2012, Polyakov Vladimir, Chris Umbel
 
@@ -44249,7 +44364,7 @@ PorterStemmer.stem = function(token) {
 	return head + superlativeResult;
 };
 
-},{"./stemmer_ru":73}],64:[function(require,module,exports){
+},{"./stemmer_ru":76}],67:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -44337,7 +44452,7 @@ module.exports = function() {
     };
 }
 
-},{"../tokenizers/aggressive_tokenizer":76,"../util/stopwords":98}],65:[function(require,module,exports){
+},{"../tokenizers/aggressive_tokenizer":79,"../util/stopwords":101}],68:[function(require,module,exports){
 /*
 Copyright (c) 2012, David Przybilla, Chris Umbel
 
@@ -44397,7 +44512,7 @@ module.exports = function() {
     };
 }
 
-},{"../tokenizers/aggressive_tokenizer_es":77,"../util/stopwords_es":99}],66:[function(require,module,exports){
+},{"../tokenizers/aggressive_tokenizer_es":80,"../util/stopwords_es":102}],69:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 Farsi Stemmer by Fardin Koochaki <me@fardinak.com>
@@ -44453,7 +44568,7 @@ module.exports = function() {
     };
 }
 
-},{"../tokenizers/aggressive_tokenizer_fa":78,"../util/stopwords_fa":100}],67:[function(require,module,exports){
+},{"../tokenizers/aggressive_tokenizer_fa":81,"../util/stopwords_fa":103}],70:[function(require,module,exports){
 /*
 Copyright (c) 2014, Ismaël Héry
 
@@ -44513,7 +44628,7 @@ module.exports = function() {
    };
 }
 
-},{"../tokenizers/aggressive_tokenizer_fr":79,"../util/stopwords_fr":101}],68:[function(require,module,exports){
+},{"../tokenizers/aggressive_tokenizer_fr":82,"../util/stopwords_fr":104}],71:[function(require,module,exports){
 var stopwords = require('../util/stopwords_it');
 var Tokenizer = require('../tokenizers/aggressive_tokenizer_it');
 
@@ -44550,7 +44665,7 @@ module.exports = function() {
         };
     };
 }
-},{"../tokenizers/aggressive_tokenizer_it":80,"../util/stopwords_it":102}],69:[function(require,module,exports){
+},{"../tokenizers/aggressive_tokenizer_it":83,"../util/stopwords_it":105}],72:[function(require,module,exports){
 /*
  Copyright (c) 2012, Guillaume Marty
 
@@ -44690,7 +44805,7 @@ StemmerJa.prototype.attach = function() {
 
 module.exports = StemmerJa;
 
-},{"../tokenizers/tokenizer_ja":90,"../util/stopwords_ja":103}],70:[function(require,module,exports){
+},{"../tokenizers/tokenizer_ja":93,"../util/stopwords_ja":106}],73:[function(require,module,exports){
 /*
 Copyright (c) 2014, Kristoffer Brabrand
 
@@ -44753,7 +44868,7 @@ module.exports = function() {
     };
 }
 
-},{"../tokenizers/aggressive_tokenizer_no":82,"../util/stopwords_no":104}],71:[function(require,module,exports){
+},{"../tokenizers/aggressive_tokenizer_no":85,"../util/stopwords_no":107}],74:[function(require,module,exports){
 /*
 Copyright (c) 2013, Paweł Łaskarzewski
 
@@ -44813,7 +44928,7 @@ module.exports = function() {
     };
 }
 
-},{"../tokenizers/aggressive_tokenizer_pl":83,"../util/stopwords_pl":105}],72:[function(require,module,exports){
+},{"../tokenizers/aggressive_tokenizer_pl":86,"../util/stopwords_pl":108}],75:[function(require,module,exports){
 /*
 Copyright (c) 2014, Ismaël Héry
 
@@ -44880,7 +44995,7 @@ module.exports = function () {
   };
 };
 
-},{"../tokenizers/aggressive_tokenizer_pt":84,"../util/stopwords_pt":106}],73:[function(require,module,exports){
+},{"../tokenizers/aggressive_tokenizer_pt":87,"../util/stopwords_pt":109}],76:[function(require,module,exports){
 /*
 Copyright (c) 2012, Polyakov Vladimir, Chris Umbel
 
@@ -44940,7 +45055,7 @@ module.exports = function() {
     };
 }
 
-},{"../tokenizers/aggressive_tokenizer_ru":85,"../util/stopwords_ru":107}],74:[function(require,module,exports){
+},{"../tokenizers/aggressive_tokenizer_ru":88,"../util/stopwords_ru":110}],77:[function(require,module,exports){
 /*
 Copyright (c) 2015, Luís Rodrigues
 
@@ -45105,7 +45220,7 @@ module.exports = (function () {
   return Token;
 })();
 
-},{}],75:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 (function (Buffer){
 /*
 Copyright (c) 2011, Rob Ellis, Chris Umbel
@@ -45302,7 +45417,7 @@ TfIdf.prototype.setTokenizer = function(t) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"../tokenizers/regexp_tokenizer":86,"../util/stopwords":98,"buffer":16,"fs":15,"underscore":148}],76:[function(require,module,exports){
+},{"../tokenizers/regexp_tokenizer":89,"../util/stopwords":101,"buffer":19,"fs":18,"underscore":151}],79:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -45340,7 +45455,7 @@ AggressiveTokenizer.prototype.tokenize = function(text) {
     return this.trim(text.split(/\W+/));
 };
 
-},{"./tokenizer":88,"util":169}],77:[function(require,module,exports){
+},{"./tokenizer":91,"util":172}],80:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel,David Przybilla
 
@@ -45378,7 +45493,7 @@ AggressiveTokenizer.prototype.tokenize = function(text) {
     return this.trim(text.split(/[^a-zA-Zá-úÁ-ÚñÑüÜ]+/));
 };
 
-},{"./tokenizer":88,"util":169}],78:[function(require,module,exports){
+},{"./tokenizer":91,"util":172}],81:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 Farsi Aggressive Tokenizer by Fardin Koochaki <me@fardinak.com>
@@ -45428,7 +45543,7 @@ AggressiveTokenizer.prototype.tokenize = function(text) {
     return this.clearEmptyString(text.split(/\s+/));
 };
 
-},{"./tokenizer":88,"util":169}],79:[function(require,module,exports){
+},{"./tokenizer":91,"util":172}],82:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -45466,7 +45581,7 @@ AggressiveTokenizer.prototype.tokenize = function(text) {
     return this.trim(text.split(/[^a-z0-9äâàéèëêïîöôùüûœç]+/i));
 };
 
-},{"./tokenizer":88,"util":169}],80:[function(require,module,exports){
+},{"./tokenizer":91,"util":172}],83:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel,David Przybilla
 
@@ -45504,7 +45619,7 @@ AggressiveTokenizer.prototype.tokenize = function(text) {
     return this.trim(text.split(/\W+/));
 };
 
-},{"./tokenizer":88,"util":169}],81:[function(require,module,exports){
+},{"./tokenizer":91,"util":172}],84:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel, Martijn de Boer
 
@@ -45542,7 +45657,7 @@ AggressiveTokenizer.prototype.tokenize = function(text) {
     return this.trim(text.split(/[^a-zA-Z0-9_']+/));
 };
 
-},{"./tokenizer":88,"util":169}],82:[function(require,module,exports){
+},{"./tokenizer":91,"util":172}],85:[function(require,module,exports){
 /*
 Copyright (c) 2014, Kristoffer Brabrand
 
@@ -45583,7 +45698,7 @@ AggressiveTokenizer.prototype.tokenize = function(text) {
     return this.trim(text.split(/[^A-Za-z0-9_æøåÆØÅäÄöÖüÜ]+/));
 };
 
-},{"../normalizers/normalizer_no":46,"./tokenizer":88,"util":169}],83:[function(require,module,exports){
+},{"../normalizers/normalizer_no":49,"./tokenizer":91,"util":172}],86:[function(require,module,exports){
 /*
 Copyright (c) 2013, Paweł Łaskarzewski
 
@@ -45630,7 +45745,7 @@ AggressiveTokenizer.prototype.tokenize = function(text) {
     return this.withoutEmpty(this.clearText(text).split(' '));
 };
 
-},{"./tokenizer":88,"util":169}],84:[function(require,module,exports){
+},{"./tokenizer":91,"util":172}],87:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel,David Przybilla
 
@@ -45672,7 +45787,7 @@ AggressiveTokenizer.prototype.tokenize = function(text) {
     return this.withoutEmpty(this.trim(text.split(/[^a-zA-Zà-úÀ-Ú]/)));
 };
 
-},{"./tokenizer":88,"util":169}],85:[function(require,module,exports){
+},{"./tokenizer":91,"util":172}],88:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -45719,7 +45834,7 @@ AggressiveTokenizer.prototype.tokenize = function(text) {
     return this.withoutEmpty(this.clearText(text).split(' '));
 };
 
-},{"./tokenizer":88,"util":169}],86:[function(require,module,exports){
+},{"./tokenizer":91,"util":172}],89:[function(require,module,exports){
 /*
 Copyright (c) 2011, Rob Ellis, Chris Umbel
 
@@ -45807,7 +45922,7 @@ var WordPunctTokenizer = function(options) {
 util.inherits(WordPunctTokenizer, RegexpTokenizer);
 exports.WordPunctTokenizer = WordPunctTokenizer;
 
-},{"./tokenizer":88,"underscore":148,"util":169}],87:[function(require,module,exports){
+},{"./tokenizer":91,"underscore":151,"util":172}],90:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -45850,7 +45965,7 @@ SentenceTokenizer.prototype.tokenize = function(text) {
 
 module.exports = SentenceTokenizer;
 
-},{"./tokenizer":88,"util":169}],88:[function(require,module,exports){
+},{"./tokenizer":91,"util":172}],91:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -45903,7 +46018,7 @@ Tokenizer.prototype.tokenize = function() {};
 
 module.exports = Tokenizer;
 
-},{}],89:[function(require,module,exports){
+},{}],92:[function(require,module,exports){
 /*
  Copyright (c) 2011, Chris Umbel, Alex Langberg
 
@@ -45963,7 +46078,7 @@ CaseTokenizer.prototype.tokenize = function(text, preserveApostrophe) {
 
 module.exports = CaseTokenizer;
 
-},{"./tokenizer":88,"util":169}],90:[function(require,module,exports){
+},{"./tokenizer":91,"util":172}],93:[function(require,module,exports){
 // Original copyright:
 /*
  Copyright (c) 2008, Taku Kudo
@@ -46242,7 +46357,7 @@ TokenizerJa.prototype.tokenize = function(text) {
 
 module.exports = TokenizerJa;
 
-},{"../normalizers/normalizer_ja":45,"./tokenizer":88,"util":169}],91:[function(require,module,exports){
+},{"../normalizers/normalizer_ja":48,"./tokenizer":91,"util":172}],94:[function(require,module,exports){
 /*
 Copyright (c) 2011, Rob Ellis, Chris Umbel
 
@@ -46318,7 +46433,7 @@ TreebankWordTokenizer.prototype.tokenize = function(text) {
 
 module.exports = TreebankWordTokenizer;
 
-},{"./tokenizer":88,"underscore":148,"util":169}],92:[function(require,module,exports){
+},{"./tokenizer":91,"underscore":151,"util":172}],95:[function(require,module,exports){
 /*
  Copyright (c) 2012, Guillaume Marty
 
@@ -46902,7 +47017,7 @@ module.exports = function(str) {
   return str;
 };
 
-},{"../../util/utils":109}],93:[function(require,module,exports){
+},{"../../util/utils":112}],96:[function(require,module,exports){
 /*
 Copyright (c) 2014 Ken Koch
 
@@ -47134,7 +47249,7 @@ Trie.prototype.getSize = function() {
  **/
 module.exports = Trie;
 
-},{}],94:[function(require,module,exports){
+},{}],97:[function(require,module,exports){
 /*
  Copyright (c) 2014, Lee Wenzhu
 
@@ -47187,7 +47302,7 @@ Bag.prototype.unpack = function() {
 
 module.exports = Bag;
 
-},{}],95:[function(require,module,exports){
+},{}],98:[function(require,module,exports){
 /*
  Copyright (c) 2014, Lee Wenzhu
 
@@ -47301,7 +47416,7 @@ EdgeWeightedDigraph.prototype.toString = function() {
 
 module.exports = EdgeWeightedDigraph;
 
-},{"./bag":94,"util":169}],96:[function(require,module,exports){
+},{"./bag":97,"util":172}],99:[function(require,module,exports){
 /*
  Copyright (c) 2014, Lee Wenzhu
 
@@ -47402,7 +47517,7 @@ LongestPathTree.prototype.pathTo = function(v) {
 
 module.exports = LongestPathTree;
 
-},{"./edge_weighted_digraph":95,"./topological":108}],97:[function(require,module,exports){
+},{"./edge_weighted_digraph":98,"./topological":111}],100:[function(require,module,exports){
 /*
  Copyright (c) 2014, Lee Wenzhu
 
@@ -47504,7 +47619,7 @@ ShortestPathTree.prototype.pathTo = function(v) {
 
 module.exports = ShortestPathTree;
 
-},{"./edge_weighted_digraph":95,"./topological":108}],98:[function(require,module,exports){
+},{"./edge_weighted_digraph":98,"./topological":111}],101:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -47550,7 +47665,7 @@ var words = [
 // tell the world about the noise words.
 exports.words = words;
 
-},{}],99:[function(require,module,exports){
+},{}],102:[function(require,module,exports){
 /*
 Copyright (c) 2011, David Przybilla, Chris Umbel
 
@@ -47588,7 +47703,7 @@ var words = [
 // tell the world about the noise words.    
 exports.words = words;
 
-},{}],100:[function(require,module,exports){
+},{}],103:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 Farsi Stop Words by Fardin Koochaki <me@fardinak.com>
@@ -47628,7 +47743,7 @@ var words = [
 // tell the world about the noise words.    
 exports.words = words;
 
-},{}],101:[function(require,module,exports){
+},{}],104:[function(require,module,exports){
 /*
  Copyright (c) 2014, Ismaël Héry
 
@@ -47824,7 +47939,7 @@ var words = ['être', 'avoir', 'faire',
 
 exports.words = words;
 
-},{}],102:[function(require,module,exports){
+},{}],105:[function(require,module,exports){
 /*
 Copyright (c) 2011, David Przybilla, Chris Umbel
 
@@ -47878,7 +47993,7 @@ var words = [
 // tell the world about the noise words.    
 exports.words = words;
 
-},{}],103:[function(require,module,exports){
+},{}],106:[function(require,module,exports){
 // Original copyright:
 /*
  Licensed to the Apache Software Foundation (ASF) under one or more
@@ -47939,7 +48054,7 @@ var words = ['の', 'に', 'は', 'を', 'た', 'が', 'で', 'て', 'と', 'し
 // tell the world about the noise words.
 module.exports = words;
 
-},{}],104:[function(require,module,exports){
+},{}],107:[function(require,module,exports){
 /*
 Copyright (c) 2014, Kristoffer Brabrand
 
@@ -47982,7 +48097,7 @@ var words = [
 
 // tell the world about the noise words.
 exports.words = words;
-},{}],105:[function(require,module,exports){
+},{}],108:[function(require,module,exports){
 /*
 Copyright (c) 2013, Paweł Łaskarzewski
 
@@ -48046,7 +48161,7 @@ var words = [
 // tell the world about the noise words.
 exports.words = words;
 
-},{}],106:[function(require,module,exports){
+},{}],109:[function(require,module,exports){
 /*
 Copyright (c) 2011, Luís Rodrigues
 
@@ -48184,7 +48299,7 @@ var words = [
 // tell the world about the noise words.
 exports.words = words;
 
-},{}],107:[function(require,module,exports){
+},{}],110:[function(require,module,exports){
 /*
 Copyright (c) 2011, Polyakov Vladimir, Chris Umbel
 
@@ -48227,7 +48342,7 @@ var words = [
 // tell the world about the noise words.    
 exports.words = words;
 
-},{}],108:[function(require,module,exports){
+},{}],111:[function(require,module,exports){
 /*
  Copyright (c) 2014, Lee Wenzhu
 
@@ -48327,7 +48442,7 @@ function uniqueVertexs(edges) {
 
 module.exports = Topological;
 
-},{}],109:[function(require,module,exports){
+},{}],112:[function(require,module,exports){
 /*
  Copyright (c) 2012, Guillaume Marty
 
@@ -48448,7 +48563,7 @@ exports.replacer = replacer;
 exports.flip = flip;
 exports.merge = merge;
 
-},{}],110:[function(require,module,exports){
+},{}],113:[function(require,module,exports){
 (function (Buffer){
 /*
 Copyright (c) 2011, Chris Umbel
@@ -48538,7 +48653,7 @@ DataFile.prototype.get = get;
 module.exports = DataFile;
 
 }).call(this,require("buffer").Buffer)
-},{"./wordnet_file":113,"buffer":16,"fs":15,"util":169}],111:[function(require,module,exports){
+},{"./wordnet_file":116,"buffer":19,"fs":18,"util":172}],114:[function(require,module,exports){
 (function (Buffer){
 /*
 Copyright (c) 2011, Chris Umbel
@@ -48682,7 +48797,7 @@ IndexFile.prototype._findAt = findAt;
 module.exports = IndexFile;
 
 }).call(this,require("buffer").Buffer)
-},{"./wordnet_file":113,"buffer":16,"fs":15,"util":169}],112:[function(require,module,exports){
+},{"./wordnet_file":116,"buffer":19,"fs":18,"util":172}],115:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -48853,7 +48968,7 @@ function WordNet(dataDir) {
 
 module.exports = WordNet;
 
-},{"./data_file":110,"./index_file":111,"wordnet-db":149}],113:[function(require,module,exports){
+},{"./data_file":113,"./index_file":114,"wordnet-db":152}],116:[function(require,module,exports){
 (function (Buffer){
 /*
 Copyright (c) 2011, Chris Umbel
@@ -48926,7 +49041,7 @@ WordNetFile.appendLineChar = appendLineChar;
 module.exports = WordNetFile;
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":16,"fs":15,"path":150,"util":169}],114:[function(require,module,exports){
+},{"buffer":19,"fs":18,"path":153,"util":172}],117:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -49059,7 +49174,7 @@ BayesClassifier.prototype.probabilityOfClass = probabilityOfClass;
 BayesClassifier.restore = restore;
 
 module.exports = BayesClassifier;
-},{"./classifier":115,"util":169}],115:[function(require,module,exports){
+},{"./classifier":118,"util":172}],118:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -49115,7 +49230,7 @@ Classifier.restore = restore;
 
 module.exports = Classifier;
 
-},{}],116:[function(require,module,exports){
+},{}],119:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -49309,7 +49424,7 @@ LogisticRegressionClassifier.restore = restore;
 
 module.exports = LogisticRegressionClassifier;
 
-},{"./classifier":115,"sylvester":119,"util":169}],117:[function(require,module,exports){
+},{"./classifier":118,"sylvester":122,"util":172}],120:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -49429,13 +49544,13 @@ KMeans.prototype.cluster = cluster;
 
 module.exports = KMeans;
 
-},{"sylvester":119}],118:[function(require,module,exports){
+},{"sylvester":122}],121:[function(require,module,exports){
 
 exports.BayesClassifier = require('./classifier/bayes_classifier');
 exports.LogisticRegressionClassifier = require('./classifier/logistic_regression_classifier');
 exports.KMeans = require('./clusterer/kmeans');
 
-},{"./classifier/bayes_classifier":114,"./classifier/logistic_regression_classifier":116,"./clusterer/kmeans":117}],119:[function(require,module,exports){
+},{"./classifier/bayes_classifier":117,"./classifier/logistic_regression_classifier":119,"./clusterer/kmeans":120}],122:[function(require,module,exports){
 (function (global){
 // Copyright (c) 2011, Chris Umbel
 
@@ -49451,7 +49566,7 @@ exports.Line.Segment = require('./line.segment');
 exports.Sylvester = require('./sylvester');
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./line":120,"./line.segment":121,"./matrix":122,"./plane":123,"./sylvester":124,"./vector":125}],120:[function(require,module,exports){
+},{"./line":123,"./line.segment":124,"./matrix":125,"./plane":126,"./sylvester":127,"./vector":128}],123:[function(require,module,exports){
 // Copyright (c) 2011, Chris Umbel, James Coglan
 var Vector = require('./vector');
 var Matrix = require('./matrix');
@@ -49684,7 +49799,7 @@ Line.Z = Line.create(Vector.Zero(3), Vector.k);
 
 module.exports = Line;
 
-},{"./matrix":122,"./plane":123,"./sylvester":124,"./vector":125}],121:[function(require,module,exports){
+},{"./matrix":125,"./plane":126,"./sylvester":127,"./vector":128}],124:[function(require,module,exports){
 // Copyright (c) 2011, Chris Umbel, James Coglan
 // Line.Segment class - depends on Line and its dependencies.
 
@@ -49812,7 +49927,7 @@ Line.Segment.create = function(v1, v2) {
 
 module.exports = Line.Segment;
 
-},{"./line":120,"./vector":125}],122:[function(require,module,exports){
+},{"./line":123,"./vector":128}],125:[function(require,module,exports){
 // Copyright (c) 2011, Chris Umbel, James Coglan
 // Matrix class - depends on Vector.
 
@@ -50850,7 +50965,7 @@ Matrix.Ones = function(n, m) {
 
 module.exports = Matrix;
 
-},{"./sylvester":124,"./vector":125,"fs":15,"lapack":143}],123:[function(require,module,exports){
+},{"./sylvester":127,"./vector":128,"fs":18,"lapack":146}],126:[function(require,module,exports){
 // Copyright (c) 2011, Chris Umbel, James Coglan
 // Plane class - depends on Vector. Some methods require Matrix and Line.
 var Vector = require('./vector');
@@ -51126,7 +51241,7 @@ Plane.fromPoints = function(points) {
 
 module.exports = Plane;
 
-},{"./line":120,"./matrix":122,"./sylvester":124,"./vector":125}],124:[function(require,module,exports){
+},{"./line":123,"./matrix":125,"./sylvester":127,"./vector":128}],127:[function(require,module,exports){
 // Copyright (c) 2011, Chris Umbel, James Coglan
 // This file is required in order for any other classes to work. Some Vector methods work with the
 // other Sylvester classes and are useless unless they are included. Other classes such as Line and
@@ -51143,7 +51258,7 @@ var Sylvester = {
 
 module.exports = Sylvester;
 
-},{}],125:[function(require,module,exports){
+},{}],128:[function(require,module,exports){
 // Copyright (c) 2011, Chris Umbel, James Coglan
 // This file is required in order for any other classes to work. Some Vector methods work with the
 // other Sylvester classes and are useless unless they are included. Other classes such as Line and
@@ -51583,7 +51698,7 @@ Vector.log = function(v) {
 
 module.exports = Vector;
 
-},{"./matrix":122,"./sylvester":124}],126:[function(require,module,exports){
+},{"./matrix":125,"./sylvester":127}],129:[function(require,module,exports){
 (function (process,__filename){
 
 /**
@@ -51753,7 +51868,7 @@ exports.getRoot = function getRoot (file) {
 }
 
 }).call(this,require('_process'),"/node_modules/natural/node_modules/apparatus/node_modules/sylvester/node_modules/bindings/bindings.js")
-},{"_process":151,"fs":15,"path":150}],127:[function(require,module,exports){
+},{"_process":154,"fs":18,"path":153}],130:[function(require,module,exports){
 (function (process){
 /**
  * This is the web browser implementation of `debug()`.
@@ -51939,7 +52054,7 @@ function localstorage() {
 }
 
 }).call(this,require('_process'))
-},{"./debug":128,"_process":151}],128:[function(require,module,exports){
+},{"./debug":131,"_process":154}],131:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -52143,7 +52258,7 @@ function coerce(val) {
   return val;
 }
 
-},{"ms":145}],129:[function(require,module,exports){
+},{"ms":148}],132:[function(require,module,exports){
 (function (process,Buffer){
 
 /**
@@ -52269,11 +52384,11 @@ function ForeignFunction (cif, funcPtr, returnType, argTypes) {
 module.exports = ForeignFunction
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"./bindings":130,"_process":151,"assert":13,"buffer":16,"debug":127,"ref":147}],130:[function(require,module,exports){
+},{"./bindings":133,"_process":154,"assert":16,"buffer":19,"debug":130,"ref":150}],133:[function(require,module,exports){
 
 module.exports = require('bindings')('ffi_bindings.node')
 
-},{"bindings":126}],131:[function(require,module,exports){
+},{"bindings":129}],134:[function(require,module,exports){
 (function (process){
 
 /**
@@ -52361,7 +52476,7 @@ function Callback (retType, argTypes, abi, func) {
 module.exports = Callback
 
 }).call(this,require('_process'))
-},{"./bindings":130,"./cif":132,"_process":151,"assert":13,"debug":127,"ref":147}],132:[function(require,module,exports){
+},{"./bindings":133,"./cif":135,"_process":154,"assert":16,"debug":130,"ref":150}],135:[function(require,module,exports){
 (function (Buffer){
 
 /**
@@ -52444,7 +52559,7 @@ function CIF (rtype, types, abi) {
 module.exports = CIF
 
 }).call(this,require("buffer").Buffer)
-},{"./bindings":130,"./type":141,"assert":13,"buffer":16,"debug":127,"ref":147}],133:[function(require,module,exports){
+},{"./bindings":133,"./type":144,"assert":16,"buffer":19,"debug":130,"ref":150}],136:[function(require,module,exports){
 (function (Buffer){
 
 /**
@@ -52528,7 +52643,7 @@ function CIF_var (rtype, types, numFixedArgs, abi) {
 module.exports = CIF_var
 
 }).call(this,require("buffer").Buffer)
-},{"./bindings":130,"./type":141,"assert":13,"buffer":16,"debug":127,"ref":147}],134:[function(require,module,exports){
+},{"./bindings":133,"./type":144,"assert":16,"buffer":19,"debug":130,"ref":150}],137:[function(require,module,exports){
 (function (Buffer){
 
 /**
@@ -52659,7 +52774,7 @@ DynamicLibrary.prototype.error = function error () {
 }
 
 }).call(this,{"isBuffer":require("../../../../../../../../is-buffer/index.js")})
-},{"../../../../../../../../is-buffer/index.js":19,"./bindings":130,"./foreign_function":137,"assert":13,"debug":127,"fs":15,"ref":147}],135:[function(require,module,exports){
+},{"../../../../../../../../is-buffer/index.js":22,"./bindings":133,"./foreign_function":140,"assert":16,"debug":130,"fs":18,"ref":150}],138:[function(require,module,exports){
 (function (process){
 var DynamicLibrary = require('./dynamic_library')
   , ForeignFunction = require('./foreign_function')
@@ -52684,7 +52799,7 @@ if (process.platform == 'win32') {
 module.exports = errno
 
 }).call(this,require('_process'))
-},{"./bindings":130,"./dynamic_library":134,"./foreign_function":137,"_process":151,"ref":147}],136:[function(require,module,exports){
+},{"./bindings":133,"./dynamic_library":137,"./foreign_function":140,"_process":154,"ref":150}],139:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -52777,7 +52892,7 @@ exports.LIB_EXT = exports.Library.EXT
 // the FFI_TYPE struct definition
 exports.FFI_TYPE = exports.ffiType.FFI_TYPE
 
-},{"./bindings":130,"./callback":131,"./cif":132,"./cif_var":133,"./dynamic_library":134,"./errno":135,"./foreign_function":137,"./foreign_function_var":138,"./function":139,"./library":140,"./type":141,"assert":13,"debug":127,"ref":147,"ref-struct":146}],137:[function(require,module,exports){
+},{"./bindings":133,"./callback":134,"./cif":135,"./cif_var":136,"./dynamic_library":137,"./errno":138,"./foreign_function":140,"./foreign_function_var":141,"./function":142,"./library":143,"./type":144,"assert":16,"debug":130,"ref":150,"ref-struct":149}],140:[function(require,module,exports){
 (function (Buffer){
 
 /**
@@ -52819,7 +52934,7 @@ function ForeignFunction (funcPtr, returnType, argTypes, abi) {
 module.exports = ForeignFunction
 
 }).call(this,{"isBuffer":require("../../../../../../../../is-buffer/index.js")})
-},{"../../../../../../../../is-buffer/index.js":19,"./_foreign_function":129,"./cif":132,"assert":13,"debug":127,"ref":147}],138:[function(require,module,exports){
+},{"../../../../../../../../is-buffer/index.js":22,"./_foreign_function":132,"./cif":135,"assert":16,"debug":130,"ref":150}],141:[function(require,module,exports){
 (function (Buffer){
 
 /**
@@ -52925,7 +53040,7 @@ function getId (type) {
 }
 
 }).call(this,{"isBuffer":require("../../../../../../../../is-buffer/index.js")})
-},{"../../../../../../../../is-buffer/index.js":19,"./_foreign_function":129,"./bindings":130,"./cif_var":133,"./type":141,"assert":13,"debug":127,"ref":147}],139:[function(require,module,exports){
+},{"../../../../../../../../is-buffer/index.js":22,"./_foreign_function":132,"./bindings":133,"./cif_var":136,"./type":144,"assert":16,"debug":130,"ref":150}],142:[function(require,module,exports){
 (function (Buffer){
 
 /**
@@ -53039,7 +53154,7 @@ Function.prototype.set = function set (buffer, offset, value) {
 }
 
 }).call(this,{"isBuffer":require("../../../../../../../../is-buffer/index.js")})
-},{"../../../../../../../../is-buffer/index.js":19,"./bindings":130,"./callback":131,"./foreign_function":137,"assert":13,"debug":127,"ref":147}],140:[function(require,module,exports){
+},{"../../../../../../../../is-buffer/index.js":22,"./bindings":133,"./callback":134,"./foreign_function":140,"assert":16,"debug":130,"ref":150}],143:[function(require,module,exports){
 (function (process){
 
 /**
@@ -53118,7 +53233,7 @@ function Library (libfile, funcs, lib) {
 module.exports = Library
 
 }).call(this,require('_process'))
-},{"./dynamic_library":134,"./foreign_function":137,"./foreign_function_var":138,"_process":151,"debug":127}],141:[function(require,module,exports){
+},{"./dynamic_library":137,"./foreign_function":140,"./foreign_function_var":141,"_process":154,"debug":130}],144:[function(require,module,exports){
 (function (Buffer){
 
 /**
@@ -53251,7 +53366,7 @@ function Type (type) {
 module.exports = Type
 
 }).call(this,require("buffer").Buffer)
-},{"./bindings":130,"assert":13,"buffer":16,"debug":127,"ref":147,"ref-struct":146}],142:[function(require,module,exports){
+},{"./bindings":133,"assert":16,"buffer":19,"debug":130,"ref":150,"ref-struct":149}],145:[function(require,module,exports){
 (function (Buffer){
 /*
 Copyright (c) 2011, Chris Umbel
@@ -53326,7 +53441,7 @@ module.exports.jsMatrixToFortranArray = jsMatrixToFortranArray;
 module.exports.fortranArrayToJSArray = fortranArrayToJSArray;
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":16,"ffi":136}],143:[function(require,module,exports){
+},{"buffer":19,"ffi":139}],146:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -53359,7 +53474,7 @@ exports.lu = lapack.lu;
 exports.sgetrf = lapack.sgetrf;
 exports.sgesv = lapack.sgesv;
 
-},{"./lapack.js":144}],144:[function(require,module,exports){
+},{"./lapack.js":147}],147:[function(require,module,exports){
 (function (Buffer){
 /*
 Copyright (c) 2011, Chris Umbel
@@ -53666,7 +53781,7 @@ exports.qr = qr;
 exports.lu = lu;
 
 }).call(this,require("buffer").Buffer)
-},{"./fortranArray":142,"buffer":16,"ffi":136}],145:[function(require,module,exports){
+},{"./fortranArray":145,"buffer":19,"ffi":139}],148:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -53817,7 +53932,7 @@ function plural(ms, n, name) {
   return Math.ceil(ms / n) + ' ' + name + 's'
 }
 
-},{}],146:[function(require,module,exports){
+},{}],149:[function(require,module,exports){
 (function (Buffer){
 
 /**
@@ -54181,7 +54296,7 @@ proto.ref = function ref () {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"assert":13,"buffer":16,"debug":127,"ref":147,"util":169}],147:[function(require,module,exports){
+},{"assert":16,"buffer":19,"debug":130,"ref":150,"util":172}],150:[function(require,module,exports){
 (function (Buffer){
 
 var assert = require('assert')
@@ -55646,7 +55761,7 @@ function overwriteInspect (inspect) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"assert":13,"bindings":126,"buffer":16,"debug":127}],148:[function(require,module,exports){
+},{"assert":16,"bindings":129,"buffer":19,"debug":130}],151:[function(require,module,exports){
 //     Underscore.js 1.8.3
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -57196,7 +57311,7 @@ function overwriteInspect (inspect) {
   }
 }.call(this));
 
-},{}],149:[function(require,module,exports){
+},{}],152:[function(require,module,exports){
 (function (__dirname){
 
 exports.version = "3.1";	// this is the WordNet DB version
@@ -57204,7 +57319,7 @@ exports.path = require('path').join(__dirname, "dict");
 exports.files = require('fs').readdirSync(exports.path);
 
 }).call(this,"/node_modules/natural/node_modules/wordnet-db")
-},{"fs":15,"path":150}],150:[function(require,module,exports){
+},{"fs":18,"path":153}],153:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -57432,7 +57547,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":151}],151:[function(require,module,exports){
+},{"_process":154}],154:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -57614,7 +57729,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],152:[function(require,module,exports){
+},{}],155:[function(require,module,exports){
 const defaultStopwords = require('./stopwords_en.js').words
 
 exports.removeStopwords = function(tokens, stopwords) {
@@ -57644,7 +57759,7 @@ exports.ru = require('./stopwords_ru.js').words
 exports.sv = require('./stopwords_sv.js').words
 exports.zh = require('./stopwords_zh.js').words
 
-},{"./stopwords_da.js":153,"./stopwords_en.js":154,"./stopwords_es.js":155,"./stopwords_fa.js":156,"./stopwords_fr.js":157,"./stopwords_it.js":158,"./stopwords_ja.js":159,"./stopwords_nl.js":160,"./stopwords_no.js":161,"./stopwords_pl.js":162,"./stopwords_pt.js":163,"./stopwords_ru.js":164,"./stopwords_sv.js":165,"./stopwords_zh.js":166}],153:[function(require,module,exports){
+},{"./stopwords_da.js":156,"./stopwords_en.js":157,"./stopwords_es.js":158,"./stopwords_fa.js":159,"./stopwords_fr.js":160,"./stopwords_it.js":161,"./stopwords_ja.js":162,"./stopwords_nl.js":163,"./stopwords_no.js":164,"./stopwords_pl.js":165,"./stopwords_pt.js":166,"./stopwords_ru.js":167,"./stopwords_sv.js":168,"./stopwords_zh.js":169}],156:[function(require,module,exports){
 /*
 Creative Commons – Attribution / ShareAlike 3.0 license
 http://creativecommons.org/licenses/by-sa/3.0/
@@ -57676,7 +57791,7 @@ var words = [
 // tell the world about the noise words.
 exports.words = words
 
-},{}],154:[function(require,module,exports){
+},{}],157:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 
@@ -57716,7 +57831,7 @@ var words = [
 // tell the world about the noise words.
 exports.words = words
 
-},{}],155:[function(require,module,exports){
+},{}],158:[function(require,module,exports){
 /*
 Copyright (c) 2011, David Przybilla, Chris Umbel
 
@@ -57754,7 +57869,7 @@ var words = [
 // tell the world about the noise words.
 exports.words = words
 
-},{}],156:[function(require,module,exports){
+},{}],159:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel
 Farsi Stop Words by Fardin Koochaki <me@fardinak.com>
@@ -57794,7 +57909,7 @@ var words = [
 // tell the world about the noise words.
 exports.words = words
 
-},{}],157:[function(require,module,exports){
+},{}],160:[function(require,module,exports){
 /*
  Copyright (c) 2014, Ismaël Héry
 
@@ -57990,7 +58105,7 @@ var words = ['être', 'avoir', 'faire',
 
 exports.words = words
 
-},{}],158:[function(require,module,exports){
+},{}],161:[function(require,module,exports){
 /*
 Copyright (c) 2011, David Przybilla, Chris Umbel
 
@@ -58044,7 +58159,7 @@ var words = [
 // tell the world about the noise words.
 exports.words = words
 
-},{}],159:[function(require,module,exports){
+},{}],162:[function(require,module,exports){
 // Original copyright:
 /*
  Licensed to the Apache Software Foundation (ASF) under one or more
@@ -58105,7 +58220,7 @@ var words = ['の', 'に', 'は', 'を', 'た', 'が', 'で', 'て', 'と', 'し
 // tell the world about the noise words.
 module.exports = words
 
-},{}],160:[function(require,module,exports){
+},{}],163:[function(require,module,exports){
 /*
 Copyright (c) 2011, Chris Umbel, Martijn de Boer, Damien van Holten
 
@@ -58150,7 +58265,7 @@ var words = [
 // tell the world about the noise words.
 exports.words = words
 
-},{}],161:[function(require,module,exports){
+},{}],164:[function(require,module,exports){
 /*
 Copyright (c) 2014, Kristoffer Brabrand
 
@@ -58194,7 +58309,7 @@ var words = [
 // tell the world about the noise words.
 exports.words = words
 
-},{}],162:[function(require,module,exports){
+},{}],165:[function(require,module,exports){
 /*
 Copyright (c) 2013, Paweł Łaskarzewski
 
@@ -58258,7 +58373,7 @@ var words = [
 // tell the world about the noise words.
 exports.words = words
 
-},{}],163:[function(require,module,exports){
+},{}],166:[function(require,module,exports){
 /*
 Copyright (c) 2011, Luís Rodrigues
 
@@ -58396,7 +58511,7 @@ var words = [
 // tell the world about the noise words.
 exports.words = words
 
-},{}],164:[function(require,module,exports){
+},{}],167:[function(require,module,exports){
 /*
 Copyright (c) 2011, Polyakov Vladimir, Chris Umbel
 
@@ -58439,7 +58554,7 @@ var words = [
 // tell the world about the noise words.
 exports.words = words
 
-},{}],165:[function(require,module,exports){
+},{}],168:[function(require,module,exports){
 /*
 Creative Commons – Attribution / ShareAlike 3.0 license
 http://creativecommons.org/licenses/by-sa/3.0/
@@ -58471,7 +58586,7 @@ var words = [
 // tell the world about the noise words.
 exports.words = words
 
-},{}],166:[function(require,module,exports){
+},{}],169:[function(require,module,exports){
 /*
 Copyright (c) 2011, David Przybilla, Chris Umbel
 
@@ -58518,7 +58633,7 @@ var words = [
 // tell the world about the noise words.
 exports.words = words
 
-},{}],167:[function(require,module,exports){
+},{}],170:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -58543,14 +58658,14 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],168:[function(require,module,exports){
+},{}],171:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],169:[function(require,module,exports){
+},{}],172:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -59140,4 +59255,4 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":168,"_process":151,"inherits":167}]},{},[1,2,3,4,5,6,7,8,9]);
+},{"./support/isBuffer":171,"_process":154,"inherits":170}]},{},[1,2,3,4,5,6,7,8,9,10,11,12]);
