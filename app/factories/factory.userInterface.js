@@ -86,7 +86,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 	// idfQuery function.
 	let grabControlData = (searchTerm) => {
 		return $q((resolve, reject) => {
-			$http.get(`${firebaseValues.databaseURL}/-KfCv2MyovIbfC897sUC.json?orderBy=
+			$http.get(`${firebaseValues.databaseURL}/-KfHZVMdr_uYkWFRmhg8.json?orderBy=
 				"word"&equalTo="${searchTerm}"`)
 					.then(
 						(ObjectFromFirebase) => {
@@ -130,7 +130,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 			// console.log("queryObject", queryObject);
 			let controlObject = firebaseControlData[i].data[individualIdfKeys[i]];
 			if (controlObject === undefined) {
-				queryObject.inverseDocumentFrequency = 1 + Math.log10(2/1); // TODO: Amend with dynamic data from control set.
+				queryObject.inverseDocumentFrequency = 1 + Math.log10(6/1); // TODO: Amend with dynamic data from control set.
 			} else {
 				queryObject.inverseDocumentFrequency = controlObject.inverseDocumentFrequency;
 			}

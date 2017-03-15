@@ -12,6 +12,10 @@ require("./values/");
 app.config(function($routeProvider){
     $routeProvider.
     when('/', {
+        templateUrl: '../partials/partial.home.html',
+        controller: 'homeCtrl'
+    }).
+    when('/ControlData', {
         templateUrl: '../partials/partial.rawData.html',
         controller: "dataCtrl"
     }).
@@ -19,7 +23,7 @@ app.config(function($routeProvider){
     	templateUrl: '../partials/partial.userInterface.html',
     	controller: 'userInterfaceCtrl'
     }).
-    when('/Chart/', {
+    when('/Chart', {
         templateUrl: '../partials/partial.chart.html',
         controller: 'chartCtrl'
     });
