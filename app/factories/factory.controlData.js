@@ -10,13 +10,22 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 	let originalTokensArray = [];
 
 	// Import the control data from storage.
-	let getJSON = () => {
+	let getPsalmsJSON = () => {
 	    return $q((resolve, reject)=>{
-	        $http.get("../../psalms.json")
-	        .then((returnObject)=>{
-	        resolve(returnObject);
+	        $http.get("../../psalms.json").
+	        	then((returnObject)=>{
+	        		resolve(returnObject);
 	    	});
 	    });
+	};
+
+	let getTestJSON = () => {
+		return $q((resolve, reject) => {
+			$http.get("../../test.json").
+				then((returnObject)=>{
+					resolve(returnObject);
+				});
+		});
 	};
 
 	// Parse the dataObject passed from the async call above into a two-dimensional array 
@@ -32,32 +41,37 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 	let keyArray = [];
 	let sortedTokensArray = [];
 	let parseJSON = (dataObject) => {
-		// Initialize an empty array to hold the data keys of the dataObject so that we
-		// can access each value/string in the dataObject.
-		// Loop through the dataObject, grab the keys, and push them into the array.
-		for (var i = 0; i < (Object.keys(dataObject.data.Psalms).length); i++) {
-			keyArray.push(Object.keys(dataObject.data.Psalms[i]));
-		}
-		// Loop through the data in the dataObject, grab each string, lowercase it, 
-		// tokenize it, remove all stopwords, and push them into an array.
-		for (i = 0; i < (dataObject.data.Psalms).length; i++) {
-			// Initialize a variable to hold each value of the dataObject as a single string
-			let oneString;
-			oneString = dataObject.data.Psalms[i][keyArray[i]];
-			// Lowercase each string, then tokenize it, pushing each token into an array.
-			let tokensArray = tokenizer.tokenize(oneString.toLowerCase());
-			//
-			originalTokensArray.push(tokensArray);
-			// Remove all stop words from the array of tokens.
-			tokensArray = stopWord.removeStopwords(tokensArray).sort();
-			// Push the sorted tokensArray into an array.
-			sortedTokensArray.push(tokensArray);
-		}
+		return $q((resolve, reject) => {
+			console.log("in promise");
+			// Initialize an empty array to hold the data keys of the dataObject so that we
+			// can access each value/string in the dataObject.
+			// Loop through the dataObject, grab the keys, and push them into the array.
+			for (var i = 0; i < (Object.keys(dataObject.data.Psalms).length); i++) {
+				keyArray.push(Object.keys(dataObject.data.Psalms[i]));
+			}
+			// Loop through the data in the dataObject, grab each string, lowercase it, 
+			// tokenize it, remove all stopwords, and push them into an array.
+			for (i = 0; i < (dataObject.data.Psalms).length; i++) {
+				// Initialize a variable to hold each value of the dataObject as a single string
+				let oneString;
+				oneString = dataObject.data.Psalms[i][keyArray[i]];
+				// Lowercase each string, then tokenize it, pushing each token into an array.
+				let tokensArray = tokenizer.tokenize(oneString.toLowerCase());
+				//
+				originalTokensArray.push(tokensArray);
+				// Remove all stop words from the array of tokens.
+				tokensArray = stopWord.removeStopwords(tokensArray).sort();
+				// Push the sorted tokensArray into an array.
+				sortedTokensArray.push(tokensArray);
+			}
+			console.log("at resolve");
+			resolve(sortedTokensArray);
+		});
 	};
 
 	// Calculate the number of times each token appears in its document, create an object
 	// for each token, and append the relevant statistical data.
-	let countTokens = () => {
+	let countTokens = (sortedTokensArray) => {
 		// Set the initial count value for each term.
 		let count = 1;
 		// Initialize a parent array to hold children arrays that contain each token object. 
@@ -206,5 +220,5 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 		return dataToOutput;
 	};
 
-	return {getJSON, parseJSON, countTokens, getData};
+	return {getPsalmsJSON, getTestJSON, parseJSON, countTokens, getData};
 };

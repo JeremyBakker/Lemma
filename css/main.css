@@ -1,3 +1,27 @@
+.container {
+  font-family: "IM Fell English SC", serif;
+  width: 80%; }
 
+.rawDataRows {
+  font-family: "Josefin Slab", serif;
+  font-size: 1.2em; }
+
+.rawDataHead {
+  font-size: 1.5em; }
+
+.input-field {
+  margin-top: 20px; }
+
+.queryInput {
+  font-size: 1.5em; }
+
+/* label focus color */
+.input-field input[type=text]:focus + label {
+  color: #000; }
+
+/* label underline focus color */
+.input-field input[type=text]:focus {
+  border-bottom: 1px solid #000;
+  box-shadow: 0 1px 0 0 #000; }
 
 /*# sourceMappingURL=main.css.map */

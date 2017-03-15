@@ -1,18 +1,20 @@
-<input type="text" name="query" ng-model="queryInput"></input>
+<div class="input-field">
+  <label for="query" class="queryInput">Query</label>
+  <input type="text" name="query" ng-model="queryInput" class="queryInput"></input>
+</div>
 <button ng-click="grabQuery()">Input Query</button>
-<!-- <button ng-click="grabControlData()">Grab Control</button> -->
- <button ng-click="displayData()">Display Data</button>
+<button ng-click="displayData()">Display Data</button>
 
 <table style="width:100%">
-  <tr>
-    <th>Document</th>
-    <th>Word</th>
-    <th>Term Frequency</th> 
-    <th>Normalized Term Frequency</th>
-    <th>Inverse Document Frequency</th>
-    <th>tf-idf</th>
+  <tr class="rawDataHead">
+    <th style="text-align: center">Document</th>
+    <th style="text-align: center">Word</th>
+    <th style="text-align: center">Term Frequency</th> 
+    <th style="text-align: center">Normalized Term Frequency</th>
+    <th style="text-align: center">Inverse Document Frequency</th>
+    <th style="text-align: center">Tf-Idf</th>
   </tr>
-  <tr ng-repeat="each in data">
+  <tr ng-repeat="each in data" class="rawDataRow">
   	<td style="text-align: center"> {{each.document}} </td>
     <td style="text-align: center"> {{each.word}} </td>
   	<td style="text-align: center"> {{each.count}} </td>

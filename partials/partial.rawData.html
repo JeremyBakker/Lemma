@@ -1,19 +1,16 @@
-<button ng-click="getData()">Click Me to Import Data!</button>
-<button ng-click="parseData()">Then Click Me to Parse Data!</button>
-<button ng-click="printData()">Finally, Click Me to Display Data!</button>
-
+<a class="waves-effect waves-light btn grey col s6" ng-click="printData()">Display Data</a>
 
 
 <table style="width:100%">
-  <tr>
-    <th>Document</th>
-    <th>Word</th>
-    <th>Term Frequency</th> 
-    <th>Normalized Term Frequency</th>
-    <th>Inverse Document Frequency</th>
-    <th>tf-idf</th>
+  <tr class="rawDataHead">
+    <th style="text-align: center">Document</th>
+    <th style="text-align: center">Word</th>
+    <th style="text-align: center">Term Frequency</th> 
+    <th style="text-align: center">Normalized Term Frequency</th>
+    <th style="text-align: center">Inverse Document Frequency</th>
+    <th style="text-align: center">Tf-Idf</th>
   </tr>
-  <tr ng-repeat="each in data">
+  <tr ng-repeat="each in data" class="rawDataRows">
   	<td style="text-align: center"> {{each.document}} </td>
     <td style="text-align: center"> {{each.word}} </td>
   	<td style="text-align: center"> {{each.count}} </td>
