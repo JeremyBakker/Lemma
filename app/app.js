@@ -20,8 +20,8 @@ app.config(function($routeProvider){
         controller: "dataCtrl"
     }).
     when('/UserInterface', {
-    	templateUrl: '../partials/partial.userInterface.html',
-    	controller: 'userInterfaceCtrl'
+    	templateUrl: '../partials/partial.query.html',
+    	controller: 'queryCtrl'
     }).
     when('/Chart', {
         templateUrl: '../partials/partial.chart.html',
