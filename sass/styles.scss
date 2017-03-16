@@ -1,6 +1,9 @@
 $primary-font: 'IM Fell English SC', serif;
 $secondary-font: 'Josefin Slab', serif;
 
+#titleHeader {
+	font-family: $primary-font;
+}
 
 .container {
 	font-family: $primary-font;

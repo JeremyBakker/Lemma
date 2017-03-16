@@ -1,5 +1,113 @@
 <button ng-click="showData()">Click Me to Show Data!</button>
 
-<div>
-	<p ng-model="result">{{result}}</p>
+<div id="controlChart">
+	<p> Chart Test </p>
+	<script>
+
+	let height = 900,
+    	width = 900;
+
+    let	padding = 50;
+
+    let controlChart = 	d3.select("#controlChart")
+	                    .append('svg')
+	                    .attr('height', height + padding * 2 )
+	                    .attr('width', width + padding * 2)
+	                    .append('g')
+	                    .attr('id', 'control')
+	                    .attr('transform', 
+	                      'translate(' + padding + ',' + padding + ')');
+
+    var xScale = d3.scaleLinear()
+                          .range([0, width]);
+
+    let yScale = d3.scaleLinear()
+                          .range([height, 0]);
+	
+    let xAxis = d3.axisBottom()
+    	.scale(xScale)
+    	.ticks(10);
+
+    let yAxis = d3.axisLeft()
+    	.scale(yScale)
+    	.ticks(10);
+
+	controlChart.append("text")
+		.attr("class", "x label")
+		.attr("text-anchor", "end")
+		.attr("x", width)
+		.attr("y", height - 6)
+		.text("Term Frequency");
+
+    controlChart.append("text")
+	    .attr("class", "y label")
+	    .attr("text-anchor", "end")
+	    .attr("y", 6)
+	    .attr("dy", ".75em")
+	    .attr("transform", "rotate(-90)")
+	    .text("Inverse Document Frequency");
+
+   d3.json('../d3TestData.json', function(error, data) {
+		let key = Object.keys(data);
+		data = data[key];
+		yDomain = d3.extent(data, function(element){
+		return element.inverseDocumentFrequency;
+		});
+
+		xDomain = d3.extent(data, function(element) {
+		return element.termFrequency;
+		});
+
+		yScale.domain(yDomain);
+		xScale.domain(xDomain);
+
+		controlChart.append("g")
+	        .attr("class", "x axis")
+	        .attr("transform", "translate(0," + height + ")")
+	        .call(xAxis);      
+
+		controlChart.append("g")
+			.attr("class", "y axis")
+			.call(yAxis);
+
+		dots = controlChart.selectAll('g.dots')
+				.data(data)
+				.enter()
+				.append('g')
+				.attr('class', 'dots');
+
+		dots.attr('transform', function(d) {
+			termFrequency = d.termFrequency;
+			x = xScale(termFrequency)
+			y = yScale(d.inverseDocumentFrequency)
+			return 'translate(' + x + ',' + y + ')'
+			})
+			.style('stroke', '#000')
+			.style('fill', 'grey');
+
+		dots.append('circle')
+			.attr('r', 5);
+
+		dots.append('text')
+			.text(function(d) {
+				return "term: " + d.word + "    tf-idf: " + (d.tfIdf).toFixed(2);
+			})
+			.style('display', 'none');
+
+		dots.on('mouseenter', function(d, i) {
+			dot = d3.select(this);
+			dot.select('text')
+				.style('display', 'block');
+		});
+
+		dots.on('mouseleave', function(d, i){
+			d3.select(this)
+				.select('text')
+				.style('display','none');
+		});
+
+    });
+
+
+	</script>
 </div>

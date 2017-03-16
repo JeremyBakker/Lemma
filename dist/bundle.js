@@ -21,8 +21,8 @@ app.config(function($routeProvider){
         controller: "dataCtrl"
     }).
     when('/UserInterface', {
-    	templateUrl: '../partials/partial.userInterface.html',
-    	controller: 'userInterfaceCtrl'
+    	templateUrl: '../partials/partial.query.html',
+    	controller: 'queryCtrl'
     }).
     when('/Chart', {
         templateUrl: '../partials/partial.chart.html',
@@ -34,7 +34,7 @@ app.config(function($routeProvider){
 
 module.exports = function($scope, CosineFactory) {
 	// TODO: set up this controller to pull data from Firebase based on uid
-	
+
 	$scope.showData = () => {
 		let results = CosineFactory.getData();
 		$scope.result = results;
@@ -44,7 +44,7 @@ module.exports = function($scope, CosineFactory) {
 "use strict";
 
 module.exports = function($scope, DataFactory) {
-
+	
 	$scope.printData = () => {
 		let results = DataFactory.getData();
 		$scope.data = results;
@@ -55,6 +55,9 @@ module.exports = function($scope, DataFactory) {
 "use strict";
 
 module.exports = function($scope, $window, DataFactory) {
+
+	$scope.showNav = false;
+
 	$scope.getPsalmsData = () => {
 		$window.location.href="#!/ControlData";
 		DataFactory.getPsalmsJSON().
@@ -64,6 +67,7 @@ module.exports = function($scope, $window, DataFactory) {
 	};
 
 	$scope.getTestData = () => {
+		$scope.navShow = !$scope.navShow;
 		$window.location.href="#!/ControlData";
 		DataFactory.getTestJSON().
 			then((data) => DataFactory.parseJSON(data)).
@@ -99,9 +103,9 @@ let angular = require("../../lib/node_modules/angular/"),
 
 app.controller('homeCtrl', require('./controller.home.js'));
 app.controller('dataCtrl', require('./controller.controlData.js'));
-app.controller('userInterfaceCtrl', require('./controller.userInterface.js'));
+app.controller('queryCtrl', require('./controller.query.js'));
 app.controller('chartCtrl', require('./controller.chart.js'));
-},{"../../lib/node_modules/angular/":16,"./controller.chart.js":2,"./controller.controlData.js":3,"./controller.home.js":4,"./controller.userInterface.js":5}],7:[function(require,module,exports){
+},{"../../lib/node_modules/angular/":16,"./controller.chart.js":2,"./controller.controlData.js":3,"./controller.home.js":4,"./controller.query.js":5}],7:[function(require,module,exports){
 "use strict";
 
 module.exports = function DataFactory ($q, $http, firebaseCredentials) {
@@ -595,10 +599,10 @@ let angular = require("../../lib/node_modules/angular/"),
 	app = angular.module("religiousStruggle");
 
 app.factory('DataFactory', require('./factory.controlData.js'));
-app.factory('QueryFactory', require('./factory.userInterface.js'));
+app.factory('QueryFactory', require('./factory.query.js'));
 app.factory('DataStorageFactory', require('./factory.dataStorage.js'));
 app.factory('CosineFactory', require('./factory.cosine.js'));
-},{"../../lib/node_modules/angular/":16,"./factory.controlData.js":7,"./factory.cosine.js":8,"./factory.dataStorage.js":9,"./factory.userInterface.js":10}],12:[function(require,module,exports){
+},{"../../lib/node_modules/angular/":16,"./factory.controlData.js":7,"./factory.cosine.js":8,"./factory.dataStorage.js":9,"./factory.query.js":10}],12:[function(require,module,exports){
 "use strict";
 
 module.exports = function firebaseCredentials() {
