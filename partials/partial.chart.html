@@ -1,13 +1,14 @@
 <button ng-click="showData()">Click Me to Show Data!</button>
 
 <div id="controlChart">
-	<p> Chart Test </p>
 	<script>
 
-	let height = 900,
+	let height = 500,
     	width = 900;
 
     let	padding = 50;
+
+    let defaultCircleRadius = 5;
 
     let controlChart = 	d3.select("#controlChart")
 	                    .append('svg')
@@ -18,12 +19,12 @@
 	                    .attr('transform', 
 	                      'translate(' + padding + ',' + padding + ')');
 
-    var xScale = d3.scaleLinear()
+    let xScale = d3.scaleLinear()
                           .range([0, width]);
 
     let yScale = d3.scaleLinear()
                           .range([height, 0]);
-	
+
     let xAxis = d3.axisBottom()
     	.scale(xScale)
     	.ticks(10);
@@ -36,13 +37,13 @@
 		.attr("class", "x label")
 		.attr("text-anchor", "end")
 		.attr("x", width)
-		.attr("y", height - 6)
+		.attr("y", height + 35)
 		.text("Term Frequency");
 
     controlChart.append("text")
 	    .attr("class", "y label")
 	    .attr("text-anchor", "end")
-	    .attr("y", 6)
+	    .attr("y", -40)
 	    .attr("dy", ".75em")
 	    .attr("transform", "rotate(-90)")
 	    .text("Inverse Document Frequency");
@@ -50,6 +51,7 @@
    d3.json('../d3TestData.json', function(error, data) {
 		let key = Object.keys(data);
 		data = data[key];
+		
 		yDomain = d3.extent(data, function(element){
 		return element.inverseDocumentFrequency;
 		});
@@ -74,11 +76,16 @@
 				.data(data)
 				.enter()
 				.append('g')
-				.attr('class', 'dots');
+				.attr('class', 'dots')
+				.attr("x", function(d, i) {
+			   		return xScale(d.termFrequency);
+			   })
+			   .attr("y", function(d) {
+			   		return height - yScale(d.inverseDocumentFrequency);
+			   });
 
 		dots.attr('transform', function(d) {
-			termFrequency = d.termFrequency;
-			x = xScale(termFrequency)
+			x = xScale(d.termFrequency)
 			y = yScale(d.inverseDocumentFrequency)
 			return 'translate(' + x + ',' + y + ')'
 			})
@@ -88,26 +95,40 @@
 		dots.append('circle')
 			.attr('r', 5);
 
-		dots.append('text')
-			.text(function(d) {
-				return "term: " + d.word + "    tf-idf: " + (d.tfIdf).toFixed(2);
-			})
-			.style('display', 'none');
+		dots.on("mouseover", function(d) {
+			d3.select(this).select('circle').attr('r', 10).style('fill', 'blue');
+			console.log("this", this);
 
-		dots.on('mouseenter', function(d, i) {
-			dot = d3.select(this);
-			dot.select('text')
-				.style('display', 'block');
+			d3.select("#tooltip")
+			  .select("#document")
+			  .text(d.document);
+			  
+			d3.select("#tooltip")
+			  .select("#word")
+			  .text(d.word);
+
+			d3.select("#tooltip")
+			  .select("#tfIdf")
+			  .text((d.tfIdf).toFixed(4));
+
+			d3.select(".tooltipWord").classed("hidden", false);
+			d3.select(".tooltipDocument").classed("hidden", false);
+			d3.select(".tooltipTfIdf").classed("hidden", false);
 		});
 
-		dots.on('mouseleave', function(d, i){
-			d3.select(this)
-				.select('text')
-				.style('display','none');
+		dots.on("mouseout", function() {
+			d3.select(this).select('circle').attr('r',5).style('fill', 'grey');
+			d3.select(".tooltipWord").classed("hidden", true);
 		});
 
     });
 
-
 	</script>
+	<div id="tooltip">
+		<div>
+	        <h4>Lexical Data</h4>
+	        <p>Term: <span id="word" class="tooltipWord hidden"></span><p>
+	        <p>Document: <span id="document" class="tooltipDocument hidden"></span><p>
+	        <p>tf-idf: <span id="tfIdf" class="tooltipTfIdf hidden"></span></p>
+	</div>
 </div>
