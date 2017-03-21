@@ -13,20 +13,22 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 	let getPsalmsJSON = () => {
 	    return $q((resolve, reject)=>{
 	        $http.get("../../psalms.json").
-	        	then((returnObject)=>{
-	        		resolve(returnObject);
-	    	});
+	        	then((returnObject)=> parseJSON(returnObject)).
+				then((sortedTokensArray) => countTokens(sortedTokensArray));
 	    });
 	};
+
 
 	let getTestJSON = () => {
 		return $q((resolve, reject) => {
 			$http.get("../../test.json").
-				then((returnObject)=>{
-					resolve(returnObject);
-				});
+				then((returnObject)=> parseJSON(returnObject)).
+				then((sortedTokensArray) => countTokens(sortedTokensArray));
+			
 		});
 	};
+
+
 
 	// Parse the dataObject passed from the async call above into a two-dimensional array 
 	// of alphabetized tokens, grouped by original document source. This will allow us 
@@ -38,11 +40,12 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 	// the sorted tokens array 1.) within the countTokens function in order to count the 
 	// tokens and 2.) within the inverseDocumentFrequency function to determine the total 
 	// number of documents in the control set.
-	let keyArray = [];
-	let sortedTokensArray = [];
+	let keyArray;
+	let sortedTokensArray;
 	let parseJSON = (dataObject) => {
+		keyArray = [];
+		sortedTokensArray = [];
 		return $q((resolve, reject) => {
-			console.log("in promise");
 			// Initialize an empty array to hold the data keys of the dataObject so that we
 			// can access each value/string in the dataObject.
 			// Loop through the dataObject, grab the keys, and push them into the array.
@@ -64,7 +67,7 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 				// Push the sorted tokensArray into an array.
 				sortedTokensArray.push(tokensArray);
 			}
-			console.log("at resolve");
+			console.log("sortedTokensArray", sortedTokensArray);
 			resolve(sortedTokensArray);
 		});
 	};
@@ -109,9 +112,9 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 				countedTokensArray[i][j].termFrequency = termFrequency;
 			}
 		}
+		console.log("countedTokensArray", countedTokensArray);
 		inverseDocumentFrequency(countedTokensArray);
 	};
-
 	// Set the document appearance of each term to 1. Then push all the terms into a single
 	// array and sort them alphabetically. Compare neighbors and add document appearance 
 	// numbers when neighbor words match. Set the numberOfDocs property of all duplicate
@@ -121,6 +124,7 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 	let inverseDocumentFrequency = (countedTokensArray) => {
 		// Initialize an array to hold the combined list of words.
 		let idfPrepArray = [];
+		console.log("idfPrepArray", idfPrepArray);
 		// Loop through the arrays in the counted tokens array and push each word into one 
 		// array.
 		for (var i = 0; i < countedTokensArray.length; i++) {
@@ -192,6 +196,7 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 		setControlData(dataToOutput).then(
 			(ObjectFromFirebase) => {
 				firebaseObjectKey = ObjectFromFirebase.data.name;
+				
 				console.log("firebaseObjectKey returned: ", firebaseObjectKey);
 			});
 	};

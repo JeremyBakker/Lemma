@@ -4,8 +4,8 @@ module.exports = function CosineFactory (DataStorageFactory) {
 	// TODO: push cosine similarity data from here to Firebase once uid functionality is set
 
 	let createIdfVectors = () => {
-	let queryArray = [];
-	let controlArray = [];
+		let queryArray = [];
+		let controlArray = [];
 		let queryTfIdf;
 		let data = DataStorageFactory.getSetData();
 		let sumIdf = 0;
@@ -35,11 +35,10 @@ module.exports = function CosineFactory (DataStorageFactory) {
 			}
 			controlArray.push(controlTfIdf);
 		}
-			console.log("queryArray", queryArray);
-			console.log("controlArray", controlArray);
 			calculateCosine(queryArray, controlArray);
 	};
 
+	let cosineResult;
 	let calculateCosine = (a, b) => {
 		let numerator = 0;
 		let aDenominator = 0;
@@ -51,20 +50,21 @@ module.exports = function CosineFactory (DataStorageFactory) {
 		}
 		let cosineSimilarity = numerator/(Math.sqrt(aDenominator) * Math.sqrt(bDenominator));
 		if (isNaN(cosineSimilarity)) {
-			console.log("There is no correlation between the query and the control data.");
+			cosineResult = "There is no correlation between the query and the control data.";
 		} else {	
-			console.log("cosineSimilarity", cosineSimilarity);
+			cosineResult = cosineSimilarity;
 		}
 	};
-
-// [Definition: if a = (a1,a2,...,an) and b = (b1,b2,...,bn) then a.b = Sum(a1*b1 + a2*b2 + ... + an*bn) 
-// and ||a|| = sqrt(a1^2 + a2^2 + ... + an^2) and ||b|| = sqrt(b1^2 + b2^2 + ... + bn^2). ]
 	
 	let getData = () => {
 		createIdfVectors();
 	};
 
-	return {createIdfVectors, calculateCosine, getData};
+	let printData = () => {
+		return cosineResult;
+	};
+
+	return {createIdfVectors, calculateCosine, getData, printData};
 
 };
 

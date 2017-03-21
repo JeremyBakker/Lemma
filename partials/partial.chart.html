@@ -1,9 +1,8 @@
-<button ng-click="showData()">Click Me to Show Data!</button>
-
 <div id="controlChart">
 	<script>
 
-	let height = 500,
+function init() {
+	var height = 500,
     	width = 900;
 
     let	padding = 50;
@@ -48,10 +47,8 @@
 	    .attr("transform", "rotate(-90)")
 	    .text("Inverse Document Frequency");
 
-   d3.json('../d3TestData.json', function(error, data) {
-		let key = Object.keys(data);
-		data = data[key];
-		
+   d3.json(`https://lemma-6aeab.firebaseio.com/-Kfg0NSkaOAosOWnRUl6.json`, function(error, data) {
+		console.log("data", data);
 		yDomain = d3.extent(data, function(element){
 		return element.inverseDocumentFrequency;
 		});
@@ -122,6 +119,9 @@
 		});
 
     });
+}
+
+init();
 
 	</script>
 	<div id="tooltip">

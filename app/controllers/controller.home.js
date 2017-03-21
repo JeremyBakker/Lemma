@@ -2,23 +2,14 @@
 
 module.exports = function($scope, $window, DataFactory) {
 
-	$scope.showNav = false;
-
 	$scope.getPsalmsData = () => {
+		DataFactory.getPsalmsJSON();
 		$window.location.href="#!/ControlData";
-		DataFactory.getPsalmsJSON().
-			then((data) => DataFactory.parseJSON(data)).
-			then((sortedTokensArray) => DataFactory.countTokens(sortedTokensArray)
-		);
 	};
 
 	$scope.getTestData = () => {
-		$scope.navShow = !$scope.navShow;
+		DataFactory.getTestJSON();
 		$window.location.href="#!/ControlData";
-		DataFactory.getTestJSON().
-			then((data) => DataFactory.parseJSON(data)).
-			then((sortedTokensArray) => DataFactory.countTokens(sortedTokensArray)
-		);
 	};
 
 };

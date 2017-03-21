@@ -1,11 +1,19 @@
-<nav>
+<nav ng-controller="navCtrl">
 	<div class="nav-wrapper grey darken-2">
 		<a href="#" class="brand-logo"><img src="../images/Lambda-128.png" alt="Image of the letter lambda" height="60px" width="60px"></a>
+		<a href="#" data-activates="hamburger" class="button-collapse"><i class="material-icons">menu</i></a>
 		<ul id="nav-mobile" class="right hide-on-med-and-down">
-			<li><a href="/#!">Home</a></li>
-			<li><a href="/#!ControlData">Control Data</a></li>
-			<li><a href="/#!UserInterface">Query Data</a></li>
-			<li><a href="/#!Chart">Charts</a></li>
+			<li><a ng-click="home()">Home</a></li>
+			<li><a ng-click="control()">Control Data</a></li>
+			<li><a ng-click="query()">Query Data</a></li>
+			<li><a ng-click="chart()">Charts</a></li>
 		</ul>
+		<ul class="side-nav" id="hamburger">
+        	<li><a ng-click="home()">Home</a></li>
+			<li><a ng-click="control()">Control Data</a></li>
+			<li><a ng-click="query()">Query Data</a></li>
+			<li><a ng-click="chart()">Charts</a></li>
+		</ul>
+      </ul>
 	</div>
 </nav>
