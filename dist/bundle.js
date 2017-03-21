@@ -42,11 +42,11 @@ module.exports = function($scope, CosineFactory, DataStorageFactory) {
 module.exports = function($scope, $document, DataFactory) {
 
 	$scope.printData = function() {
-		console.log("printData fired");
+		$scope.emptyData = false;
 		let results = DataFactory.getData();
-		console.log("results", results);
-		if (results === []) {
-			$scope.alert = "Please choose a dataset to query from the Home Screen.";
+		if (results.length === 0) {
+			$scope.emptyData = true;
+			$scope.alertMessage = "Please choose a dataset to query from the Home screen.";
 		} else {
 			$scope.data = results;
 		}
@@ -96,11 +96,20 @@ module.exports = function($scope, $location) {
 },{}],6:[function(require,module,exports){
 "use strict";
 
-module.exports = function($scope, QueryFactory, CosineFactory) {
+module.exports = function($scope, DataFactory, QueryFactory, CosineFactory) {
 
 	$scope.grabQuery = () => {
 		let query = $scope.queryInput;
+		$scope.alertMessage = "";
+		$scope.queryEntered = false;
+		if (query === undefined) {
+			$scope.alertMessage = "Please enter a query."
+			$scope.queryEntered = true;
+			count++
+			return;
+		} else {
 		QueryFactory.setQuery(query);
+		}
 	};
 
 	$scope.grabControlData = () => {
@@ -117,8 +126,11 @@ module.exports = function($scope, QueryFactory, CosineFactory) {
 
 	$scope.showData = () => {
 		CosineFactory.getData();
-		results = CosineFactory.printData();
-		console.log("results", results);
+		if (DataFactory.getData().length === 0) {
+			results = "Please choose a control data set from the Home screen."
+		} else {
+			results = CosineFactory.printData();
+		}
 		$scope.result = results;
 	};
 };

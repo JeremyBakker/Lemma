@@ -3,13 +3,17 @@
   <input type="text" name="query" ng-model="queryInput" class="queryInput"></input>
 </div>
 <button class="waves-effect waves-light btn grey col s6" ng-click="grabQuery()">Input Query</button>
-<button class="waves-effect waves-light btn grey col s6" ng-click="displayData()">Display Data</button>
-<button id="cosineSimilarity" class="waves-effect waves-light btn grey col s6" ng-click="showData()">Show the Cosine Similarity</button>
-<div style="height: 105px">
+<button class="waves-effect waves-light btn grey col s6" ng-click="displayData()" ng-hide="queryEntered">Display Data</button>
+<button id="cosineSimilarity" class="waves-effect waves-light btn grey col s6" ng-click="showData()" ng-hide="queryEntered">Show the Cosine Similarity</button>
+<div id="alertMessage">
+  <h2 style="color: red; text-align: center">{{alertMessage}}</h2>
+</div>
+<div style="height: 105px" ng-hide="queryEntered">
   <h3> Cosine Similarity: <h4>{{result}}</h4> </h3>
 </div>
 
-<table style="width:100%">
+
+<table style="width:100%" ng-hide="queryEntered">
   <tr class="rawDataHead">
     <th style="text-align: center">Document</th>
     <th style="text-align: center">Word</th>

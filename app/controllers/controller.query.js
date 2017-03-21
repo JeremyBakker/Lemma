@@ -1,10 +1,19 @@
 "use strict";
 
-module.exports = function($scope, QueryFactory, CosineFactory) {
+module.exports = function($scope, DataFactory, QueryFactory, CosineFactory) {
 
 	$scope.grabQuery = () => {
 		let query = $scope.queryInput;
+		$scope.alertMessage = "";
+		$scope.queryEntered = false;
+		if (query === undefined) {
+			$scope.alertMessage = "Please enter a query."
+			$scope.queryEntered = true;
+			count++
+			return;
+		} else {
 		QueryFactory.setQuery(query);
+		}
 	};
 
 	$scope.grabControlData = () => {
@@ -21,8 +30,11 @@ module.exports = function($scope, QueryFactory, CosineFactory) {
 
 	$scope.showData = () => {
 		CosineFactory.getData();
-		results = CosineFactory.printData();
-		console.log("results", results);
+		if (DataFactory.getData().length === 0) {
+			results = "Please choose a control data set from the Home screen."
+		} else {
+			results = CosineFactory.printData();
+		}
 		$scope.result = results;
 	};
 };
