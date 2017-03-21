@@ -67,7 +67,6 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 				// Push the sorted tokensArray into an array.
 				sortedTokensArray.push(tokensArray);
 			}
-			console.log("sortedTokensArray", sortedTokensArray);
 			resolve(sortedTokensArray);
 		});
 	};
@@ -112,7 +111,6 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 				countedTokensArray[i][j].termFrequency = termFrequency;
 			}
 		}
-		console.log("countedTokensArray", countedTokensArray);
 		inverseDocumentFrequency(countedTokensArray);
 	};
 	// Set the document appearance of each term to 1. Then push all the terms into a single
@@ -124,7 +122,6 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 	let inverseDocumentFrequency = (countedTokensArray) => {
 		// Initialize an array to hold the combined list of words.
 		let idfPrepArray = [];
-		console.log("idfPrepArray", idfPrepArray);
 		// Loop through the arrays in the counted tokens array and push each word into one 
 		// array.
 		for (var i = 0; i < countedTokensArray.length; i++) {
