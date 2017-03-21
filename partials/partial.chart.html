@@ -94,7 +94,6 @@ function init() {
 
 		dots.on("mouseover", function(d) {
 			d3.select(this).select('circle').attr('r', 10).style('fill', 'blue');
-			console.log("this", this);
 
 			d3.select("#tooltip")
 			  .select("#document")
