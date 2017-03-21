@@ -15,12 +15,14 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 	// and make them available throughout this factory.
 	let countedQueryTokensArray;
 
+	let query;
+
 	// Grab the query from the text input box in the userInterface partial, tokenize it, 
 	// lowercase the tokens, store the tokens in the global originalQueryTokens array, 
 	// remove the stop words, sort the remaining tokens, and push them into an array to be
 	// passed into the next function.
 	let setQuery = (queryReceived) => {
-		let query = queryReceived;	
+		query = queryReceived;	
 		// Parse the query data into individual tokens.
 		let tokensArray = tokenizer.tokenize(query.toLowerCase());
 		originalQueryTokens = tokensArray;
@@ -34,6 +36,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 	// for each token, and append the count. Push each object into an array.
 	let countTokens = (tokensArray) => {
 		countedQueryTokensArray = []; // Clear the array for new searches.
+		console.log("countedQueryTokensArray", countedQueryTokensArray);
 		let count = 1; // Every word appears at least once.
 		for (var i = 0; i < tokensArray.length; i++){
 			if (tokensArray[i] !== tokensArray[i+1] || tokensArray.length === 1) {
@@ -85,8 +88,9 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 	// Pass the relevant query data to the getQueryKeys function via the Promise.all in the
 	// idfQuery function.
 	let grabControlData = (searchTerm) => {
+		console.log("grabControlData fired: ", searchTerm);
 		return $q((resolve, reject) => {
-			$http.get(`${firebaseValues.databaseURL}/-KfHZVMdr_uYkWFRmhg8.json?orderBy=
+			$http.get(`${firebaseValues.databaseURL}/-Kfg0NSkaOAosOWnRUl6.json?orderBy=
 				"word"&equalTo="${searchTerm}"`)
 					.then(
 						(ObjectFromFirebase) => {
@@ -101,6 +105,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 	// the token's idf value. Terms that appear multiple times have multiple keys. Separate 
 	// the first key in each array to use for assigning the idf value.
 	let getQueryKeys = (firebaseControlData) => {
+		console.log("firebaseControlData at getQueryKeys", firebaseControlData);
 		DataStorageFactory.setFirebaseData(firebaseControlData);
 		let controlIdfKeys = [];
 		let individualIdfKeys = [];
@@ -152,11 +157,12 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataStor
 	let finalArray = [];
 	let setData = (completedArray) => {
 		finalArray = completedArray;
+		console.log("final Array at setData in the query factory: ", finalArray);
 	};
 
 	// Create a function to make dataToOutput available to controllers.
 	let getData = () => {
-		console.log("finalArray at getData", finalArray);
+		console.log("finalArray at getData in the query factory: ", finalArray);
 		return finalArray;
 	};
 

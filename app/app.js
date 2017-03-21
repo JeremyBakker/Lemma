@@ -19,12 +19,13 @@ app.config(function($routeProvider){
         templateUrl: '../partials/partial.rawData.html',
         controller: "dataCtrl"
     }).
-    when('/UserInterface', {
+    when('/Query', {
     	templateUrl: '../partials/partial.query.html',
     	controller: 'queryCtrl'
     }).
     when('/Chart', {
         templateUrl: '../partials/partial.chart.html',
         controller: 'chartCtrl'
-    });
+    })
+    .otherwise('/');
 });
