@@ -1,9 +1,9 @@
-<button id="displayDataButton" class="waves-effect waves-light btn grey col s6" ng-click="printData()">Display Data</button>
+<button id="displayDataButton" class="waves-effect waves-light btn grey col s6" ng-click="printData()" ng-hide="emptyData">Display Data</button>
 
-<div style="font-size: 2em; color: red"> {{alert}} </div>
+<h4 style="color: red; text-align: center"> {{alertMessage}} </h4>
 
 
-<table style="width:100%">
+<table style="width:100%" ng-hide="emptyData">
   <tr class="rawDataHead">
     <th style="text-align: center">Document</th>
     <th style="text-align: center">Word</th>

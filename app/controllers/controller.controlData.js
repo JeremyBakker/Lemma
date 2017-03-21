@@ -3,11 +3,11 @@
 module.exports = function($scope, $document, DataFactory) {
 
 	$scope.printData = function() {
-		console.log("printData fired");
+		$scope.emptyData = false;
 		let results = DataFactory.getData();
-		console.log("results", results);
-		if (results === []) {
-			$scope.alert = "Please choose a dataset to query from the Home Screen.";
+		if (results.length === 0) {
+			$scope.emptyData = true;
+			$scope.alertMessage = "Please choose a dataset to query from the Home screen.";
 		} else {
 			$scope.data = results;
 		}
