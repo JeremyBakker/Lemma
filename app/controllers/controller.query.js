@@ -10,12 +10,12 @@ module.exports = function($scope, DataFactory, QueryFactory, CosineFactory) {
 		$scope.alertMessage = "";
 		$scope.queryEntered = false;
 		if (query === undefined) {
-			$scope.alertMessage = "Please enter a query."
+			$scope.alertMessage = "Please enter a query.";
 			$scope.queryEntered = true;
 			return;
 		}
 		else if (DataFactory.getData().length === 0) {
-			$scope.alertMessage = "Please choose a control data set from the Home screen."
+			$scope.alertMessage = "Please choose a control data set from the Home screen.";
 			$scope.queryEntered = true;
 		} else {
 		QueryFactory.setQuery(query);
@@ -31,11 +31,11 @@ module.exports = function($scope, DataFactory, QueryFactory, CosineFactory) {
 		$scope.data = [];
 		$scope.queryEntered = false;
 		if (query === undefined) {
-			$scope.alertMessage = "Please enter a query."
+			$scope.alertMessage = "Please enter a query.";
 			$scope.queryEntered = true;
 		}
 		else if (DataFactory.getData().length === 0) {
-			$scope.alertMessage = "Please choose a control data set from the Home screen."
+			$scope.alertMessage = "Please choose a control data set from the Home screen.";
 			$scope.queryEntered = true;
 		} else {
 			$scope.data = QueryFactory.getData();
@@ -48,11 +48,11 @@ module.exports = function($scope, DataFactory, QueryFactory, CosineFactory) {
 		CosineFactory.getData();
 		$scope.queryEntered = false;
 		if (query === undefined) {
-			$scope.alertMessage = "Please enter a query."
+			$scope.alertMessage = "Please enter a query.";
 			$scope.queryEntered = true;
 		}
 		else if (DataFactory.getData().length === 0) {
-			$scope.alertMessage = "Please choose a control data set from the Home screen."
+			$scope.alertMessage = "Please choose a control data set from the Home screen.";
 			$scope.queryEntered = true;
 		} else {
 			results = CosineFactory.printData();
