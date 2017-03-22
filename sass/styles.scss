@@ -39,9 +39,7 @@ $secondary-font: 'Josefin Slab', serif;
 }
 
 #tooltip {
-        position: absolute;
-        right: 200px;
-        top: 150px;
+        float: left;
         width: 200px;
         height: auto;
         padding: 10px;
@@ -53,7 +51,7 @@ $secondary-font: 'Josefin Slab', serif;
         -webkit-box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
         -moz-box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
         box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
-        pointer-events: none;
+        // pointer-events: none;
 }
 
 .tooltip.hidden {
@@ -65,4 +63,13 @@ $secondary-font: 'Josefin Slab', serif;
         font-family: sans-serif;
         font-size: 16px;
         line-height: 20px;
+}
+
+.axis path {
+  display: none;
+}
+
+.axis line {
+  stroke-opacity: 0.3;
+  shape-rendering: crispEdges;
 }

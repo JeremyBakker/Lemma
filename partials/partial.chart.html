@@ -1,96 +1,122 @@
-<div id="controlChart">
+<div id="controlChart" style="margin-top: 10px">
+	<div id="tooltip">
+		<div>
+	        <h4>Lexical Data</h4>
+	        <p>Term: <span id="word" class="tooltipWord hidden"></span><p>
+	        <p>Document: <span id="document" class="tooltipDocument hidden"></span><p>
+	        <p>tf-idf: <span id="tfIdf" class="tooltipTfIdf hidden"></span></p>
+		</div>
+	<button class="waves-effect waves-light btn grey" id="resetView">Reset View</button>
+	</div>
+	<svg width = "760" height = "400" id="svg" style="margin-left: 10px">
+	</svg>
 	<script>
 
 function init() {
-	var height = 500,
-    	width = 900;
+	
+	d3.json(`https://lemma-6aeab.firebaseio.com/-Kfg0NSkaOAosOWnRUl6.json`, function(error, data) {
 
-    let	padding = 50;
+		var svg = d3.select("#svg"),
+			width = +svg.attr("width"),
+			height = +svg.attr("height");
 
-    let defaultCircleRadius = 5;
+		var zoom = d3.zoom()
+			.scaleExtent([1, 40])
+			.translateExtent([[-100, -100], [width + 90, height + 100]])
+			.on("zoom", zoomed);
 
-    let controlChart = 	d3.select("#controlChart")
-	                    .append('svg')
-	                    .attr('height', height + padding * 2 )
-	                    .attr('width', width + padding * 2)
-	                    .append('g')
-	                    .attr('id', 'control')
-	                    .attr('transform', 
-	                      'translate(' + padding + ',' + padding + ')');
-
-    let xScale = d3.scaleLinear()
-                          .range([0, width]);
-
-    let yScale = d3.scaleLinear()
-                          .range([height, 0]);
-
-    let xAxis = d3.axisBottom()
-    	.scale(xScale)
-    	.ticks(10);
-
-    let yAxis = d3.axisLeft()
-    	.scale(yScale)
-    	.ticks(10);
-
-	controlChart.append("text")
-		.attr("class", "x label")
-		.attr("text-anchor", "end")
-		.attr("x", width)
-		.attr("y", height + 35)
-		.text("Term Frequency");
-
-    controlChart.append("text")
-	    .attr("class", "y label")
-	    .attr("text-anchor", "end")
-	    .attr("y", -40)
-	    .attr("dy", ".75em")
-	    .attr("transform", "rotate(-90)")
-	    .text("Inverse Document Frequency");
-
-   d3.json(`https://lemma-6aeab.firebaseio.com/-Kfg0NSkaOAosOWnRUl6.json`, function(error, data) {
-		console.log("data", data);
-		yDomain = d3.extent(data, function(element){
-		return element.inverseDocumentFrequency;
+		let xDomain = d3.extent(data, function(element) {
+		return element.termFrequency - .002;
 		});
 
-		xDomain = d3.extent(data, function(element) {
-		return element.termFrequency;
+		let xScale = d3.scaleLinear()
+			.domain(xDomain)
+			.range([-1, width + 500]);
+
+		let yDomain = d3.extent(data, function(element){
+		return element.inverseDocumentFrequency + .05;
 		});
 
-		yScale.domain(yDomain);
-		xScale.domain(xDomain);
+		let yScale = d3.scaleLinear()
+			.domain(yDomain)
+			.range([height - 20, 1]);
 
-		controlChart.append("g")
-	        .attr("class", "x axis")
-	        .attr("transform", "translate(0," + height + ")")
-	        .call(xAxis);      
+	    let defaultCircleRadius = 5;
 
-		controlChart.append("g")
-			.attr("class", "y axis")
-			.call(yAxis);
+	    let xAxis = d3.axisBottom(xScale)
+	    	.ticks(10)
+	    	.tickSize(height)
+	    	.tickPadding(8-height);
 
-		dots = controlChart.selectAll('g.dots')
+	    let yAxis = d3.axisRight(yScale)
+	    	.ticks(10)
+	    	.tickSize(width)
+	    	.tickPadding(8-width);
+
+	    let view = svg.append("rect")
+	    	.attr("class", "view")
+	    	.attr("x", 0.5)
+	    	.attr("y", 0.5)
+	    	.attr("width", width)
+	    	.attr("height", height + 1)
+	    	.attr("opacity", 0);
+
+	    let gX = svg.append("g")
+	    	.attr("class", "axis axis-x")
+	    	.call(xAxis);
+
+	    let gY = svg.append("g")
+	    	.attr("class", "axis axis-y")
+	    	.call(yAxis);
+
+		let dots = svg.selectAll('g.dots')
 				.data(data)
 				.enter()
 				.append('g')
 				.attr('class', 'dots')
-				.attr("x", function(d, i) {
+				.attr("cx", function(d, i) {
 			   		return xScale(d.termFrequency);
 			   })
-			   .attr("y", function(d) {
+			   .attr("cy", function(d) {
 			   		return height - yScale(d.inverseDocumentFrequency);
 			   });
 
 		dots.attr('transform', function(d) {
-			x = xScale(d.termFrequency)
-			y = yScale(d.inverseDocumentFrequency)
-			return 'translate(' + x + ',' + y + ')'
+			cx = xScale(d.termFrequency)
+			cy = yScale(d.inverseDocumentFrequency)
+			return 'translate(' + cx + ',' + cy + ')'
 			})
 			.style('stroke', '#000')
 			.style('fill', 'grey');
 
 		dots.append('circle')
 			.attr('r', 5);
+
+	    svg.call(zoom);
+
+	    function zoomed() {
+	    	// zoom.translateExtent([0,0],[760,400]);
+	    	view.attr("transform", d3.event.transform);
+	    	gX.call(xAxis.scale(d3.event.transform.rescaleX(xScale)));
+	    	gY.call(yAxis.scale(d3.event.transform.rescaleY(yScale)));
+	    	dots.attr('transform', function(d) {
+	    		cx = d3.event.transform.applyX(xScale(d.termFrequency))
+	    		cy = d3.event.transform.applyY(yScale(d.inverseDocumentFrequency))
+	    		return 'translate(' + cx + ',' + cy + ')'
+	    	});
+	    	// dots.attr('transform', function(d){
+	    	// 	let r = 5 * d3.event.transform.k
+	    	// 	return 'translate(' + cx + 'y' + cy + ')'
+	    	// })
+		}
+
+		d3.select("button").on("click", resetted);
+
+		function resetted() {
+			svg.transition()
+				.duration(750)
+				.call(zoom.transform, d3.zoomIdentity);
+		}
 
 		dots.on("mouseover", function(d) {
 			d3.select(this).select('circle').attr('r', 10).style('fill', 'blue');
@@ -118,16 +144,10 @@ function init() {
 		});
 
     });
-}
+};
 
 init();
 
 	</script>
-	<div id="tooltip">
-		<div>
-	        <h4>Lexical Data</h4>
-	        <p>Term: <span id="word" class="tooltipWord hidden"></span><p>
-	        <p>Document: <span id="document" class="tooltipDocument hidden"></span><p>
-	        <p>tf-idf: <span id="tfIdf" class="tooltipTfIdf hidden"></span></p>
-	</div>
+	
 </div>
