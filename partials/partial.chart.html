@@ -1,4 +1,4 @@
-<div id="controlChart" style="margin-top: 10px">
+<div id="controlChart" style="margin-top: 25px">
 	<div id="tooltip">
 		<div>
 	        <h4>Lexical Data</h4>
@@ -8,8 +8,11 @@
 		</div>
 	<button class="waves-effect waves-light btn grey" id="resetView">Reset View</button>
 	</div>
-	<svg width = "760" height = "400" id="svg" style="margin-left: 10px">
+	<p id="inverseDocumentFrequency">Inverse Document Frequency</p>
+	<svg width = "760" height = "400" id="svg" style="margin-left: 50px">
 	</svg>
+	<p id="termFrequency">Term Frequency</p>
+
 	<script>
 
 function init() {
@@ -28,7 +31,6 @@ function init() {
 		let xDomain = d3.extent(data, function(element) {
 		return element.termFrequency - .002;
 		});
-
 		let xScale = d3.scaleLinear()
 			.domain(xDomain)
 			.range([-1, width + 500]);
@@ -44,9 +46,16 @@ function init() {
 	    let defaultCircleRadius = 5;
 
 	    let xAxis = d3.axisBottom(xScale)
-	    	.ticks(10)
+	    	.ticks(10, ",f")
 	    	.tickSize(height)
 	    	.tickPadding(8-height);
+	    
+	    svg.append("text")
+			.attr("class", "x label")
+			.attr("text-anchor", "end")
+			.attr("x", width-10)
+			.attr("y", 35)
+			.text("tf-idf");
 
 	    let yAxis = d3.axisRight(yScale)
 	    	.ticks(10)
@@ -57,8 +66,8 @@ function init() {
 	    	.attr("class", "view")
 	    	.attr("x", 0.5)
 	    	.attr("y", 0.5)
-	    	.attr("width", width)
-	    	.attr("height", height + 1)
+	    	.attr("width", width - 15)
+	    	.attr("height", height - 15)
 	    	.attr("opacity", 0);
 
 	    let gX = svg.append("g")
@@ -74,20 +83,13 @@ function init() {
 				.enter()
 				.append('g')
 				.attr('class', 'dots')
-				.attr("cx", function(d, i) {
-			   		return xScale(d.termFrequency);
-			   })
-			   .attr("cy", function(d) {
-			   		return height - yScale(d.inverseDocumentFrequency);
-			   });
-
-		dots.attr('transform', function(d) {
-			cx = xScale(d.termFrequency)
-			cy = yScale(d.inverseDocumentFrequency)
-			return 'translate(' + cx + ',' + cy + ')'
-			})
-			.style('stroke', '#000')
-			.style('fill', 'grey');
+				.attr('transform', function(d) {
+					cx = xScale(d.termFrequency)
+					cy = yScale(d.inverseDocumentFrequency)
+					return 'translate(' + cx + ',' + cy + ')'
+					})
+					.style('stroke', '#000')
+					.style('fill', 'grey');
 
 		dots.append('circle')
 			.attr('r', 5);
@@ -95,7 +97,6 @@ function init() {
 	    svg.call(zoom);
 
 	    function zoomed() {
-	    	// zoom.translateExtent([0,0],[760,400]);
 	    	view.attr("transform", d3.event.transform);
 	    	gX.call(xAxis.scale(d3.event.transform.rescaleX(xScale)));
 	    	gY.call(yAxis.scale(d3.event.transform.rescaleY(yScale)));
@@ -104,10 +105,6 @@ function init() {
 	    		cy = d3.event.transform.applyY(yScale(d.inverseDocumentFrequency))
 	    		return 'translate(' + cx + ',' + cy + ')'
 	    	});
-	    	// dots.attr('transform', function(d){
-	    	// 	let r = 5 * d3.event.transform.k
-	    	// 	return 'translate(' + cx + 'y' + cy + ')'
-	    	// })
 		}
 
 		d3.select("button").on("click", resetted);
@@ -142,12 +139,8 @@ function init() {
 			d3.select(this).select('circle').attr('r',5).style('fill', 'grey');
 			d3.select(".tooltipWord").classed("hidden", true);
 		});
-
     });
 };
-
 init();
-
 	</script>
-	
 </div>

@@ -5,6 +5,9 @@
   font-family: "IM Fell English SC", serif;
   width: 80%; }
 
+#displayDataButton {
+  margin-top: 10px; }
+
 .rawDataRows {
   font-family: "Josefin Slab", serif;
   font-size: 1.2em; }
@@ -56,5 +59,15 @@
 .axis line {
   stroke-opacity: 0.3;
   shape-rendering: crispEdges; }
+
+#inverseDocumentFrequency {
+  transform: rotate(270deg);
+  position: absolute;
+  left: 255px;
+  top: 360px; }
+
+#termFrequency {
+  position: absolute;
+  left: 400px; }
 
 /*# sourceMappingURL=main.css.map */

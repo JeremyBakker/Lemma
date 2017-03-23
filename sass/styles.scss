@@ -10,6 +10,10 @@ $secondary-font: 'Josefin Slab', serif;
 	width: 80%;
 }
 
+#displayDataButton {
+  margin-top: 10px;
+}
+
 .rawDataRows {
 	font-family: $secondary-font;
 	font-size: 1.2em;
@@ -72,4 +76,16 @@ $secondary-font: 'Josefin Slab', serif;
 .axis line {
   stroke-opacity: 0.3;
   shape-rendering: crispEdges;
+}
+
+#inverseDocumentFrequency {
+  transform: rotate(270deg);
+  position: absolute;
+  left: 255px;
+  top: 360px;
+}
+
+#termFrequency {
+  position: absolute;
+  left: 400px;
 }
