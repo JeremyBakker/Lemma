@@ -1,7 +1,10 @@
 "use strict";
 
 module.exports = function CosineFactory (DataStorageFactory) {
-	// TODO: push cosine similarity data from here to Firebase once uid functionality is set
+
+	//=========================================================//
+	//======Create vectors for the query and control data======//
+	//=========================================================//
 
 	let createIdfVectors = () => {
 		let queryArray = [];
@@ -38,6 +41,10 @@ module.exports = function CosineFactory (DataStorageFactory) {
 			calculateCosine(queryArray, controlArray);
 	};
 
+	//==============================================================//
+	//===============Calculate cosine similarity====================//
+	//==============================================================//
+
 	let cosineResult;
 	let calculateCosine = (a, b) => {
 		let numerator = 0;
@@ -56,6 +63,10 @@ module.exports = function CosineFactory (DataStorageFactory) {
 		}
 	};
 	
+	//==============================================================//
+	//======Make data available to other sections of the code=======//
+	//==============================================================//
+
 	let getData = () => {
 		createIdfVectors();
 	};
