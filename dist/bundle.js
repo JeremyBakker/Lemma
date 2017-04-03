@@ -177,9 +177,11 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 
 	let tokenizer = new natural.WordTokenizer();
 
-	let originalTokensArray = [];
 
-	// Import the control data from storage.
+	//=========================================// 
+	//=========Import the control data=========//
+	//=========================================//
+	
 	let getPsalmsJSON = () => {
 	    return $q((resolve, reject)=>{
 	        $http.get("../../psalms.json").
@@ -187,7 +189,6 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 				then((sortedTokensArray) => countTokens(sortedTokensArray));
 	    });
 	};
-
 
 	let getTestJSON = () => {
 		return $q((resolve, reject) => {
@@ -198,39 +199,41 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 		});
 	};
 
+	//=========================================// 
+	//==========Parse the control data=========//
+	//=========================================//
 
-
-	// Parse the dataObject passed from the async call above into a two-dimensional array 
+	// Parse the dataObject passed from the async call into a two-dimensional array 
 	// of alphabetized tokens, grouped by original document source. This will allow us 
 	// to iterate over the tokens to determine term frequency and inverse document frequency.
 	// We initialize two empty arrays on the global scope: one to hold the sorted keys and 
-	// one to hold the sorted tokens, both from the dataObject. This will allow us to access 
-	// the relevant data in this factory. We will pass the key array into the countTokens 
-	// function in order to append the name of the relevant document to each term. We access 
+	// one to hold the sorted tokens, both from the Firebase dataObject. This will allow us 
+	// access the data in later operations. We will pass the keyArray into the countTokens 
+	// function in order to append the name of the attendant document to each term. We access 
 	// the sorted tokens array 1.) within the countTokens function in order to count the 
 	// tokens and 2.) within the inverseDocumentFrequency function to determine the total 
-	// number of documents in the control set.
+	// number of documents in the control set. We use the originalTokensArray below to calculate 
+	// the term frequency.
+	let originalTokensArray = [];
 	let keyArray;
 	let sortedTokensArray;
 	let parseJSON = (dataObject) => {
 		keyArray = [];
 		sortedTokensArray = [];
 		return $q((resolve, reject) => {
-			// Initialize an empty array to hold the data keys of the dataObject so that we
-			// can access each value/string in the dataObject.
-			// Loop through the dataObject, grab the keys, and push them into the array.
+			// Loop through the dataObject, grab the keys, and push them into the keyArray.
 			for (var i = 0; i < (Object.keys(dataObject.data.Psalms).length); i++) {
 				keyArray.push(Object.keys(dataObject.data.Psalms[i]));
 			}
 			// Loop through the data in the dataObject, grab each string, lowercase it, 
-			// tokenize it, remove all stopwords, and push them into an array.
+			// tokenize it, remove all stopwords from the data, and push the strings into 
+			// an array.
 			for (i = 0; i < (dataObject.data.Psalms).length; i++) {
 				// Initialize a variable to hold each value of the dataObject as a single string
 				let oneString;
 				oneString = dataObject.data.Psalms[i][keyArray[i]];
 				// Lowercase each string, then tokenize it, pushing each token into an array.
 				let tokensArray = tokenizer.tokenize(oneString.toLowerCase());
-				//
 				originalTokensArray.push(tokensArray);
 				// Remove all stop words from the array of tokens.
 				tokensArray = stopWord.removeStopwords(tokensArray).sort();
@@ -241,17 +244,19 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 		});
 	};
 
-	// Calculate the number of times each token appears in its document, create an object
-	// for each token, and append the relevant statistical data.
+	//=========================================// 
+	//=======Count the term frequency==========//
+	//=========================================//
+
 	let countTokens = (sortedTokensArray) => {
 		// Set the initial count value for each term.
 		let count = 1;
-		// Initialize a parent array to hold children arrays that contain each token object. 
-		// Each array represents a document. The parent array will pass directly to the 
-		// termFrequency function.
+		// Initialize a parent array to hold children arrays that contain each token object
+		// organized by document. The parent array will pass directly to the termFrequency 
+		// function in order to calculate the normalized term frequency.
 		let countedTokensArray = [];
 		// Loop through the 2D array of sorted tokens, count each token, and create an object 
-		// for it.
+		// for it, appending the relevant statistical data.
 		for (var i = 0; i < sortedTokensArray.length; i++){
 			countedTokensArray[i] = [];
 			for (var j = 0; j < sortedTokensArray[i].length; j++) {
@@ -270,11 +275,15 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 		termFrequency(countedTokensArray);
 	};
 	
+	//====================================================// 
+	//=======Calculate the normalized term frequency======//
+	//====================================================//
+	
+	let termFrequency = (countedTokensArray) => {
 	// Loop through the 2D array of counted tokens and divide the number of appearances of each
 	// term by the length of each document. This gives the normalized term frequency, which 
 	// we then append to the object within the countedTokensArray. Pass the countedTokensArray 
 	// to the inverseDocumentFrequency function. 
-	let termFrequency = (countedTokensArray) => {
 		for (var i = 0; i < countedTokensArray.length; i++) {
 			for (var j = 0; j < countedTokensArray[i].length; j++) {
 				let termFrequency = countedTokensArray[i][j].count/originalTokensArray[i].length;
@@ -283,12 +292,11 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 		}
 		inverseDocumentFrequency(countedTokensArray);
 	};
-	// Set the document appearance of each term to 1. Then push all the terms into a single
-	// array and sort them alphabetically. Compare neighbors and add document appearance 
-	// numbers when neighbor words match. Set the numberOfDocs property of all duplicate
-	// words to the same number. Divide the number of documents by the numberofDocs property 
-	// and multiply by log10. This gives the inverse document frequency. Add this to each 
-	// object, then display the data and push the data to Firebase.
+
+	//=====================================================// 
+	//=======Calculate the inverse document frequency======//
+	//=====================================================//
+	
 	let inverseDocumentFrequency = (countedTokensArray) => {
 		// Initialize an array to hold the combined list of words.
 		let idfPrepArray = [];
@@ -296,7 +304,6 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 		// array.
 		for (var i = 0; i < countedTokensArray.length; i++) {
 			for (var j = 0; j < countedTokensArray[i].length; j++){
-				// countedTokensArray[i][j].documentAppearance = 1;
 				idfPrepArray.push(countedTokensArray[i][j]);
 			}
 		}
@@ -313,10 +320,11 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 		// Determine how many documents contain each term. The recursive function 
 		// setNumberofDocs() takes the count set when a term's subsequent neighbor does not
 		// match. It uses that number to move backward through the array and assign the 
-		// docCount to each term object. The loop below the function determines the count
-		// and sets docCount to the count. We need two instances of that number because one
-		// determines how far to reach back in the array, and one remains stable as the 
-		// document frequency appended to each term.
+		// docCount to each term object. The loop below the function determines the count 
+		// and sets docCount to the count. We need two instances of that number because one 
+		// determines how far to reach back in the array and must change as the recursive 
+		// function cycles; the other must remain stable to serve as the document frequency 
+		// appended to each term.
 		let setNumberOfDocs = (count, docCount) => {
 			if (count >= 0) {
 				sortedIdfPrepArray[(i-count)].documentFrequency = docCount;
@@ -352,22 +360,22 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 		setDataToOutput(idfPrepArray);
 	};
 
-	// Initialize an array on the global scope to hold the parsed data.
+	//=======================================================================// 
+	//=========Set final data for passing to other segments of the code======//
+	//=======================================================================//
+
 	let dataToOutput = [];
-	// Initialize a variable on the global scope to hold the data key returned from Firebase.
 	let firebaseObjectKey;
 	// Set the data in the global array dataToOutput because we will need to pass it to 
-	// the controller, then send it to Firebase. Log the key that Firebase gives the data.
+	// the controller, then send it to Firebase. Log the key that Firebase gives the data 
+	// so we can access it later.
 	let setDataToOutput = (data) => {
 		dataToOutput = data;
 		setControlData(dataToOutput).then(
 			(ObjectFromFirebase) => {
 				firebaseObjectKey = ObjectFromFirebase.data.name;
-				
-				console.log("firebaseObjectKey returned: ", firebaseObjectKey);
 			});
 	};
-
 	// Get the hidden values from /values/firebaseCredentials.js that will allow us to 
 	// access Firebase.
 	let firebaseValues = firebaseCredentials.getfirebaseCredentials();
@@ -385,10 +393,8 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 		});
 	};
 
-
 	// Create a function to make dataToOutput available to controllers.
 	let getData = () => {
-		console.log("dataToOutput at get", dataToOutput);
 		return dataToOutput;
 	};
 
@@ -398,7 +404,10 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 "use strict";
 
 module.exports = function CosineFactory (DataStorageFactory) {
-	// TODO: push cosine similarity data from here to Firebase once uid functionality is set
+
+	//=========================================================//
+	//======Create vectors for the query and control data======//
+	//=========================================================//
 
 	let createIdfVectors = () => {
 		let queryArray = [];
@@ -435,6 +444,10 @@ module.exports = function CosineFactory (DataStorageFactory) {
 			calculateCosine(queryArray, controlArray);
 	};
 
+	//==============================================================//
+	//===============Calculate cosine similarity====================//
+	//==============================================================//
+
 	let cosineResult;
 	let calculateCosine = (a, b) => {
 		let numerator = 0;
@@ -453,6 +466,11 @@ module.exports = function CosineFactory (DataStorageFactory) {
 		}
 	};
 	
+	//==============================================================//
+	//======Make data available to other sections of the code=======//
+	//==============================================================//
+
+
 	let getData = () => {
 		createIdfVectors();
 	};
@@ -480,7 +498,6 @@ module.exports = function DataStorageFactory ($q, $http, firebaseCredentials) {
 	let setFirebaseControlData = [];
 	let setFirebaseData = (firebaseControlData) => {
 		setFirebaseControlData = firebaseControlData;
-		console.log("setFirebaseControlData at setFireBaseData in data storage factory", setFirebaseControlData);
 	};
 
 	let getSetData = () => {
@@ -501,43 +518,47 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 
 	let tokenizer = new natural.WordTokenizer();
 
-	// Define a global variable that will hold the query tokens entered and make them 
-	// accessible throughout this factory.
-	let originalQueryTokens;
-
-	// Define a global variable that will hold the parsed, counted query tokens as objects
-	// and make them available throughout this factory.
-	let countedQueryTokensArray;
+	//==========================================================// 
+	//=======Define global variables to hold original data======//
+	//==========================================================//
 
 	let query;
+	let originalQueryTokens;
+	let countedQueryTokensArray;
+	
+	//=========================================================================// 
+	//=======Grab the search query, parse it, and pass the resulting data======//
+	//=========================================================================//
 
-	// Grab the query from the text input box in the userInterface partial, tokenize it, 
-	// lowercase the tokens, store the tokens in the global originalQueryTokens array, 
-	// remove the stop words, sort the remaining tokens, and push them into an array to be
-	// passed into the next function.
 	let setQuery = (queryReceived) => {
+		// Grab the query from the text input box in the userInterface partial, tokenize it, 
+		// lowercase the tokens, store the tokens in the global originalQueryTokens array, 
+		// remove the stop words, alphabetize the remaining tokens, and push them into an 
+		// array to be passed into the next function and counted.
 		query = queryReceived;	
-		// Parse the query data into individual tokens.
 		let tokensArray = tokenizer.tokenize(query.toLowerCase());
 		originalQueryTokens = tokensArray;
-		// Remove all stop words from the array of tokens.
 		tokensArray = stopWord.removeStopwords(tokensArray).sort();
-		// Push the sorted tokensArray into an array.
 		countTokens(tokensArray);
 	};
 
-	// Calculate the number of times each token appears in the query, create an object
-	// for each token, and append the count. Push each object into an array.
+	//=========================================// 
+	//========Count the term frequency=========//
+	//=========================================//
+
 	let countTokens = (tokensArray) => {
-		countedQueryTokensArray = []; // Clear the array for new searches.
-		let count = 1; // Every word appears at least once.
+	// Clear the array for new searches, calculate the number of times each token appears 
+	// in the query, create an object for each token, and append the count. Push each object 
+	// into an array that will be passed into the next function, which will calculate the 
+	// normalized term frequency.
+		countedQueryTokensArray = [];
+		let count = 1;
 		for (var i = 0; i < tokensArray.length; i++){
 			if (tokensArray[i] !== tokensArray[i+1] || tokensArray.length === 1) {
 				let currentTokenObject = {};
 				currentTokenObject.document = "query";
 				currentTokenObject.word = tokensArray[i];
 				currentTokenObject.count = count;
-				currentTokenObject.uid = ""; //=============TO DO==============//
 				currentTokenObject.timeStamp = new Date();
 				countedQueryTokensArray.push(currentTokenObject);
 			} else {
@@ -547,12 +568,16 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 		termFrequency(countedQueryTokensArray);
 	};
 	
+	//====================================================// 
+	//=======Calculate the normalized term frequency======//
+	//====================================================//
+
+	let termFrequency = (countedQueryTokensArray) => {
 	// Loop through the array of counted tokens and divide the number of appearances of each
 	// term by the length of each document, which is set in the global originalQueryTokens
-	// arry. This gives the normalized term frequency, which we then append to the object 
+	// array. This gives the normalized term frequency, which we then append to the object 
 	// within the countedQueryTokensArray. Pass the countedQueryTokensArray to the 
 	// inverseDocumentFrequency function. 
-	let termFrequency = (countedQueryTokensArray) => {
 		for (var i = 0; i < countedQueryTokensArray.length; i++) {
 			let termFrequency = countedQueryTokensArray[i].count/originalQueryTokens.length;
 			countedQueryTokensArray[i].termFrequency = termFrequency;
@@ -560,10 +585,14 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 		idfQuery(countedQueryTokensArray);
 	};
 
+	//==================================================================================// 
+	//=Create a Promise.all that waits for each term query to resolve before proceeding=//
+	//==================================================================================//
+
 	let idfQuery = (countedQueryTokensArray) => {	
 		let queryPromises = [];
-		// Loop through the array of tokens and append create a Promise containing each 
-		// token. Wait for each Promise to resolve before proceeding.
+		// Loop through the array of tokens and create a Promise containing each 
+		// token to be queried. 
 		for (var i = 0; i < countedQueryTokensArray.length; i++) {
 			let searchTerm = countedQueryTokensArray[i].word;
 			queryPromises.push(grabControlData(searchTerm));
@@ -573,15 +602,21 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 			catch ((error)=> console.error(error));
 	};
 	
+	//======================================================================// 
+	//=======Grab the control data to compare the search query against======//
+	//======================================================================//
+
 	// Get the hidden values from /values/firebaseCredentials.js that will allow us to 
 	// access Firebase.
 	let firebaseValues = firebaseCredentials.getfirebaseCredentials();
-	// Get the control data from Firebase, ordered by token entered in the Promise function. 
-	// This will allow us to pull the stored inverse document frequency for the query words. 
-	// Pass the relevant query data to the getQueryKeys function via the Promise.all in the
+	// Get the control data from Firebase, ordered by token entered in the Promise.all function. 
+	// This allows us to pull the stored inverse document frequency for the query words. 
+	// Pass the relevant data to the getQueryKeys function via the Promise.all in the
 	// idfQuery function.
 	let path;
 	let grabControlData = (searchTerm) => {
+		// This determines whether the user wants to query the control data or the data
+		// from Psalms. The path is a key assigned by Firebase.
 		if (DataFactory.getData()[0].document === "Test") {
 			path = "-Kfg4Sm4K4PPnCsXoN-b";
 		} else {
@@ -592,18 +627,21 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 				"word"&equalTo="${searchTerm}"`)
 					.then(
 						(ObjectFromFirebase) => {
-							console.log("Here is my Firebase Object from grabControlData: ", ObjectFromFirebase);
 							resolve(ObjectFromFirebase);
 						})
 					.catch((error) => console.error(error));
 		});
 	};
 
-	// Get the keys for each query token that exists in the control data in order to access 
-	// the token's idf value. Terms that appear multiple times have multiple keys. Separate 
-	// the first key in each array to use for assigning the idf value.
+	//=======================================================// 
+	//=======Grab the firebase keys for each query term======//
+	//=======================================================//
+
 	let getQueryKeys = (firebaseControlData) => {
-		console.log("firebaseControlData at getQueryKeys", firebaseControlData);
+	// Get the keys for each query token that exists in the control data in order to access 
+	// each token's idf value. Terms that appear multiple times have multiple keys. Separate 
+	// the first key in each array to use for assigning the idf value. Each term will have 
+	// the same idf value. Pass the keys and the data to the subsequent function.
 		DataStorageFactory.setFirebaseData(firebaseControlData);
 		let controlIdfKeys = [];
 		let individualIdfKeys = [];
@@ -621,25 +659,38 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 		assignIdfValues(individualIdfKeys, firebaseControlData);
 	};
 
-	// Assign each token the idf values from the control set. If the query token does not 
-	// exist in the control set, create an object for it from the countedQueryTokens array.
-	// Push the amended objects into the queryArray. Pass that array to the 
-	// mergeQueryCountedIdf function.
+	//========================================================// 
+	//=======Add the appropriate idf values to each term======//
+	//========================================================//
+
 	let assignIdfValues = (individualIdfKeys, firebaseControlData) => {
+	// Determine whether each token exists in the control set. If the query token does not 
+	// exist in the control set, create an object for it from the countedQueryTokens array
+	// and calculate an idf depending on its control data. If the token exists in the control
+	// set, calculate a new idf that takes into account its existence in the query document.
+	// Push the amended objects into the queryArray. Pass that array to the setTfIdf function.
 		let queryArray = [];
 		let controlArray = [];
 		for (var i = 0; i < individualIdfKeys.length; i++) {
 			let	queryObject = countedQueryTokensArray[i];
 			let controlObject = firebaseControlData[i].data[individualIdfKeys[i]];
-			if (controlObject === undefined) {
-				queryObject.inverseDocumentFrequency = 1 + Math.log10(6/1); // TODO: Amend with dynamic data from control set.
+			if (controlObject === undefined && path === "-Kfg4Sm4K4PPnCsXoN-b") {
+				queryObject.inverseDocumentFrequency = 1 + Math.log10(2/1);
+			} else if (controlObject === undefined && path === "-Kfg0NSkaOAosOWnRUl6") {
+				queryObject.inverseDocumentFrequency = 1 + Math.log10(34/1);
+			} else if (controlObject && path === "-Kfg4Sm4K4PPnCsXoN-b") {
+				queryObject.inverseDocumentFrequency = 1 + Math.log10(2 / (controlObject.documentFrequency + 1));
 			} else {
-				queryObject.inverseDocumentFrequency = controlObject.inverseDocumentFrequency;
+				queryObject.inverseDocumentFrequency = 1 + Math.log10(34 / (controlObject.documentFrequency + 1));
 			}
 			queryArray.push(queryObject);
 		}
 	setTfIdf(queryArray);
 	};
+
+	//=========================================// 
+	//===========Calculate the tf-idf==========//
+	//=========================================//
 
 	let setTfIdf = (queryArray) => {
 		for (var i = 0; i < queryArray.length; i++) {
@@ -650,17 +701,18 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 		}
 	};
 
+	//==================================================================================// 
+	//======Set the final data and make it available to other segments of the code======//
+	//==================================================================================//
+
 	let finalArray = [];
 	let setData = (completedArray) => {
 		finalArray = completedArray;
 	};
 
-	// Create a function to make dataToOutput available to controllers.
 	let getData = () => {
-		console.log("finalArray at getData in the query factory: ", finalArray);
 		return finalArray;
 	};
-
 
 	return {setQuery, grabControlData, getData};
 };

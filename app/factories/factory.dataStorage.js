@@ -11,7 +11,6 @@ module.exports = function DataStorageFactory ($q, $http, firebaseCredentials) {
 	let setFirebaseControlData = [];
 	let setFirebaseData = (firebaseControlData) => {
 		setFirebaseControlData = firebaseControlData;
-		console.log("setFirebaseControlData at setFireBaseData in data storage factory", setFirebaseControlData);
 	};
 
 	let getSetData = () => {

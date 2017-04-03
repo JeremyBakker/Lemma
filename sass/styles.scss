@@ -1,6 +1,29 @@
 $primary-font: 'IM Fell English SC', serif;
 $secondary-font: 'Josefin Slab', serif;
 
+body {
+  min-width: 1024px !important;
+}
+
+h1, h2 {
+  text-align: center;
+}
+
+#titleHeader {
+  width: 50%;
+  margin: 50px auto;
+}
+
+#buttons {
+  width: 80%;
+  margin: auto;
+}
+
+.homeButton {
+  width: 45%;
+  margin-left: 3%;
+}
+
 #titleHeader {
 	font-family: $primary-font;
 }
