@@ -102,15 +102,15 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 	// This allows us to pull the stored inverse document frequency for the query words. 
 	// Pass the relevant data to the getQueryKeys function via the Promise.all in the
 	// idfQuery function.
+	
+
 	let path;
 	let grabControlData = (searchTerm) => {
 		// This determines whether the user wants to query the control data or the data
 		// from Psalms. The path is a key assigned by Firebase.
-		if (DataFactory.getData()[0].document === "Test") {
-			path = "-Kfg4Sm4K4PPnCsXoN-b";
-		} else {
-			path = "-Kfg0NSkaOAosOWnRUl6";
-		}
+
+		let firebaseControlData = DataStorageFactory.getSetData();
+		path = firebaseControlData.setFirebaseControlData.data.name;
 		return $q((resolve, reject) => {
 			$http.get(`${firebaseValues.databaseURL}${path}.json?orderBy=
 				"word"&equalTo="${searchTerm}"`)
@@ -163,11 +163,12 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 		for (var i = 0; i < individualIdfKeys.length; i++) {
 			let	queryObject = countedQueryTokensArray[i];
 			let controlObject = firebaseControlData[i].data[individualIdfKeys[i]];
-			if (controlObject === undefined && path === "-Kfg4Sm4K4PPnCsXoN-b") {
+			console.log("controlObject.document", controlObject.document);
+			if (controlObject === undefined && controlObject.document === "Test") {
 				queryObject.inverseDocumentFrequency = 1 + Math.log10(2/1);
-			} else if (controlObject === undefined && path === "-Kfg0NSkaOAosOWnRUl6") {
+			} else if (controlObject === undefined && controlObject.document !== "Test") {
 				queryObject.inverseDocumentFrequency = 1 + Math.log10(34/1);
-			} else if (controlObject && path === "-Kfg4Sm4K4PPnCsXoN-b") {
+			} else if (controlObject && controlObject.document === "Test") {
 				queryObject.inverseDocumentFrequency = 1 + Math.log10(2 / (controlObject.documentFrequency + 1));
 			} else {
 				queryObject.inverseDocumentFrequency = 1 + Math.log10(34 / (controlObject.documentFrequency + 1));

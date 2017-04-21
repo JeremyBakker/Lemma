@@ -1,6 +1,6 @@
 "use strict";
 
-module.exports = function DataFactory ($q, $http, firebaseCredentials) {
+module.exports = function DataFactory ($q, $http, firebaseCredentials, DataStorageFactory) {
 
 	let natural = require('../../lib/node_modules/natural/'),
 		stopWord = require('../../lib/node_modules/stopword/lib/stopword.js');
@@ -217,6 +217,7 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials) {
 					.then(
 						(ObjectFromFirebase) => {
 							console.log("Here is my Firebase Object from setControlData: ", ObjectFromFirebase);
+							DataStorageFactory.setFirebaseData(ObjectFromFirebase);
 							resolve(ObjectFromFirebase);
 						})
 					.catch((error) => error);
