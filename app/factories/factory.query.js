@@ -110,7 +110,9 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 		// from Psalms. The path is a key assigned by Firebase.
 
 		let firebaseControlData = DataStorageFactory.getSetData();
-		path = firebaseControlData.setFirebaseControlData.data.name;
+		console.log("firebaseControlData at grabControlData", firebaseControlData);
+		console.log("path", firebaseControlData.originalFirebaseControlData.data.name);
+		path = firebaseControlData.originalFirebaseControlData.data.name;
 		return $q((resolve, reject) => {
 			$http.get(`${firebaseValues.databaseURL}${path}.json?orderBy=
 				"word"&equalTo="${searchTerm}"`)
@@ -135,6 +137,7 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 		let controlIdfKeys = [];
 		let individualIdfKeys = [];
 		for (var i = 0; i < firebaseControlData.length; i++) {
+			console.log("firebaseControlData at keys", firebaseControlData);
 			let keys = Object.keys(firebaseControlData[i].data);
 			controlIdfKeys.push(keys);
 		}
@@ -163,12 +166,13 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 		for (var i = 0; i < individualIdfKeys.length; i++) {
 			let	queryObject = countedQueryTokensArray[i];
 			let controlObject = firebaseControlData[i].data[individualIdfKeys[i]];
-			console.log("controlObject.document", controlObject.document);
-			if (controlObject === undefined && controlObject.document === "Test") {
+			let Data = DataStorageFactory.getSetData();
+			console.log("originalfirebaseControlData in for loop at assignIdf", Data.originalFirebaseControlData.config.data[14]);
+			if (controlObject === undefined && Data.originalFirebaseControlData.config.data[14] === "T") {
 				queryObject.inverseDocumentFrequency = 1 + Math.log10(2/1);
-			} else if (controlObject === undefined && controlObject.document !== "Test") {
+			} else if (controlObject === undefined && Data.originalFirebaseControlData.config.data[14] === "P") {
 				queryObject.inverseDocumentFrequency = 1 + Math.log10(34/1);
-			} else if (controlObject && controlObject.document === "Test") {
+			} else if (controlObject && Data.originalFirebaseControlData.config.data[14] === "T") {
 				queryObject.inverseDocumentFrequency = 1 + Math.log10(2 / (controlObject.documentFrequency + 1));
 			} else {
 				queryObject.inverseDocumentFrequency = 1 + Math.log10(34 / (controlObject.documentFrequency + 1));
