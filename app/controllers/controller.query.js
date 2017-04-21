@@ -6,7 +6,6 @@ module.exports = function($scope, DataFactory, QueryFactory, CosineFactory) {
 
 	$scope.grabQuery = () => {
 		query = $scope.queryInput;
-		console.log("query at grabQuery", query);
 		$scope.alertMessage = "";
 		$scope.queryEntered = false;
 		if (query === undefined) {
