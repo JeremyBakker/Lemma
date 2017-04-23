@@ -33,13 +33,17 @@ app.config(function($routeProvider){
 },{"../lib/node_modules/angular-route/angular-route.min.js":15,"../lib/node_modules/angular/":17,"./controllers/":7,"./factories/":12,"./values/":14}],2:[function(require,module,exports){
 "use strict";
 
-module.exports = function($scope, $document) {
+module.exports = function($scope, $document, DataStorageFactory, firebaseCredentials) {
 	$scope.printChart = function() {
 
 		let cx;
 		let cy;
 		
-		d3.json(`https://lemma-6aeab.firebaseio.com/-Kfg0NSkaOAosOWnRUl6.json`, function(error, data) {
+		let firebaseValues = firebaseCredentials.getfirebaseCredentials();
+		let firebaseControlData = DataStorageFactory.getSetData();
+		let path = firebaseControlData.originalFirebaseControlData.data.name;	
+
+		d3.json(`${firebaseValues.databaseURL}${path}.json`, function(error, data) {
 
 			var svg = d3.select("#svg"),
 				width = +svg.attr("width"),
