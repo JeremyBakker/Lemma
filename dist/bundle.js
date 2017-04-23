@@ -129,13 +129,6 @@ module.exports = function($scope, $document) {
 		    	});
 			}
 
-			$scope.callResetted = function resetted() {
-				svg.transition()
-					.duration(750)
-					.call(zoom.transform, d3.zoomIdentity);
-					console.log("resetted called");
-			}
-
 			dots.on("mouseover", function(d) {
 				d3.select(this).select('circle').attr('r', 10).style('fill', 'blue');
 
@@ -160,6 +153,14 @@ module.exports = function($scope, $document) {
 				d3.select(this).select('circle').attr('r',5).style('fill', 'grey');
 				d3.select(".tooltipWord").classed("hidden", true);
 			});
+			
+			$scope.callResetted = function resetted() {
+				svg.transition()
+					.duration(750)
+					.call(zoom.transform, d3.zoomIdentity);
+					console.log("resetted called");
+			}
+
 	    });
 	};
 };
@@ -482,7 +483,9 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials, DataStora
 				1 + Math.log10(sortedTokensArray.length/sortedIdfPrepArray[i].documentFrequency);
 			sortedIdfPrepArray[i].tfIdf = sortedIdfPrepArray[i].inverseDocumentFrequency * 
 				sortedIdfPrepArray[i].termFrequency;
+			sortedIdfPrepArray[i].numberOfDocuments = sortedTokensArray.length
 		}
+		DataStorageFactory.setControlData(idfPrepArray);
 		setDataToOutput(idfPrepArray);
 	};
 
@@ -623,6 +626,11 @@ module.exports = function DataStorageFactory ($q, $http, firebaseCredentials) {
 		setQueryArray = queryArray; 
 	};
 
+	let controlData = [];
+	let setControlData = (idfPrepArray) => {
+		controlData = idfPrepArray;
+	}
+
 	let originalFirebaseControlData = [];
 	let setOriginalFirebaseData = (firebaseControlData) => {
 		originalFirebaseControlData = firebaseControlData;
@@ -636,12 +644,13 @@ module.exports = function DataStorageFactory ($q, $http, firebaseCredentials) {
 
 	let getSetData = () => {
 		return {
+				"controlData": controlData,
 				"originalFirebaseControlData": originalFirebaseControlData,
 				"queryArray": setQueryArray,
-				"setFirebaseControlData": setFirebaseControlData};
+				"setFirebaseControlData": setFirebaseControlData}
 	};
 
-	return {setData, getSetData, setFirebaseData, setOriginalFirebaseData};
+	return {setData, getSetData, setFirebaseData, setOriginalFirebaseData, setControlData};
 };
 },{}],11:[function(require,module,exports){
 "use strict";
@@ -813,18 +822,27 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 			let	queryObject = countedQueryTokensArray[i];
 			let controlObject = firebaseControlData[i].data[individualIdfKeys[i]];
 			let Data = DataStorageFactory.getSetData();
-			console.log("originalfirebaseControlData in for loop at assignIdf", Data.originalFirebaseControlData.config.data[14]);
-			if (controlObject === undefined && Data.originalFirebaseControlData.config.data[14] === "T") {
-				queryObject.inverseDocumentFrequency = 1 + Math.log10(2/1);
-			} else if (controlObject === undefined && Data.originalFirebaseControlData.config.data[14] === "P") {
-				queryObject.inverseDocumentFrequency = 1 + Math.log10(34/1);
-			} else if (controlObject && Data.originalFirebaseControlData.config.data[14] === "T") {
-				queryObject.inverseDocumentFrequency = 1 + Math.log10(2 / (controlObject.documentFrequency + 1));
+			if (controlObject === undefined) {
+				queryObject.inverseDocumentFrequency = 1 + Math.log10((Data.controlData[0].numberOfDocuments + 1) / 1)
 			} else {
-				queryObject.inverseDocumentFrequency = 1 + Math.log10(34 / (controlObject.documentFrequency + 1));
+				queryObject.inverseDocumentFrequency = 1 + Math.log10((Data.controlData[0].numberOfDocuments + 1) / (controlObject.documentFrequency + 1))
 			}
+			// console.log("Data", Data);
+			// if (controlObject === undefined && Data.originalFirebaseControlData.config.data.includes('Test') === true) {
+			// 	queryObject.inverseDocumentFrequency = 1 + Math.log10(2/1);
+			// } else if (controlObject === undefined && Data.originalFirebaseControlData.config.data.includes('Psalm') === true) {
+			// 	queryObject.inverseDocumentFrequency = 1 + Math.log10(34/1);
+			// } else if (controlObject && Data.originalFirebaseControlData.config.data.includes('Test') === true) {
+			// 	queryObject.inverseDocumentFrequency = 1 + Math.log10(2 / (controlObject.documentFrequency + 1));
+			// } else if (controlObject && Data.originalFirebaseControlData.config.data.includes('Psalm') === true) {
+			// 	queryObject.inverseDocumentFrequency = 1 + Math.log10(34 / (controlObject.documentFrequency + 1));
+			// } else {
+			// 	queryObject.inverseDocumentFrequency = 1;
+			// }
+
 			queryArray.push(queryObject);
 		}
+	console.log("queryArray", queryArray);
 	setTfIdf(queryArray);
 	};
 

@@ -167,18 +167,27 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 			let	queryObject = countedQueryTokensArray[i];
 			let controlObject = firebaseControlData[i].data[individualIdfKeys[i]];
 			let Data = DataStorageFactory.getSetData();
-			console.log("originalfirebaseControlData in for loop at assignIdf", Data.originalFirebaseControlData.config.data[14]);
-			if (controlObject === undefined && Data.originalFirebaseControlData.config.data[14] === "T") {
-				queryObject.inverseDocumentFrequency = 1 + Math.log10(2/1);
-			} else if (controlObject === undefined && Data.originalFirebaseControlData.config.data[14] === "P") {
-				queryObject.inverseDocumentFrequency = 1 + Math.log10(34/1);
-			} else if (controlObject && Data.originalFirebaseControlData.config.data[14] === "T") {
-				queryObject.inverseDocumentFrequency = 1 + Math.log10(2 / (controlObject.documentFrequency + 1));
+			if (controlObject === undefined) {
+				queryObject.inverseDocumentFrequency = 1 + Math.log10((Data.controlData[0].numberOfDocuments + 1) / 1)
 			} else {
-				queryObject.inverseDocumentFrequency = 1 + Math.log10(34 / (controlObject.documentFrequency + 1));
+				queryObject.inverseDocumentFrequency = 1 + Math.log10((Data.controlData[0].numberOfDocuments + 1) / (controlObject.documentFrequency + 1))
 			}
+			// console.log("Data", Data);
+			// if (controlObject === undefined && Data.originalFirebaseControlData.config.data.includes('Test') === true) {
+			// 	queryObject.inverseDocumentFrequency = 1 + Math.log10(2/1);
+			// } else if (controlObject === undefined && Data.originalFirebaseControlData.config.data.includes('Psalm') === true) {
+			// 	queryObject.inverseDocumentFrequency = 1 + Math.log10(34/1);
+			// } else if (controlObject && Data.originalFirebaseControlData.config.data.includes('Test') === true) {
+			// 	queryObject.inverseDocumentFrequency = 1 + Math.log10(2 / (controlObject.documentFrequency + 1));
+			// } else if (controlObject && Data.originalFirebaseControlData.config.data.includes('Psalm') === true) {
+			// 	queryObject.inverseDocumentFrequency = 1 + Math.log10(34 / (controlObject.documentFrequency + 1));
+			// } else {
+			// 	queryObject.inverseDocumentFrequency = 1;
+			// }
+
 			queryArray.push(queryObject);
 		}
+	console.log("queryArray", queryArray);
 	setTfIdf(queryArray);
 	};
 

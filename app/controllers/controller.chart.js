@@ -96,13 +96,6 @@ module.exports = function($scope, $document) {
 		    	});
 			}
 
-			$scope.callResetted = function resetted() {
-				svg.transition()
-					.duration(750)
-					.call(zoom.transform, d3.zoomIdentity);
-					console.log("resetted called");
-			}
-
 			dots.on("mouseover", function(d) {
 				d3.select(this).select('circle').attr('r', 10).style('fill', 'blue');
 
@@ -127,6 +120,14 @@ module.exports = function($scope, $document) {
 				d3.select(this).select('circle').attr('r',5).style('fill', 'grey');
 				d3.select(".tooltipWord").classed("hidden", true);
 			});
+			
+			$scope.callResetted = function resetted() {
+				svg.transition()
+					.duration(750)
+					.call(zoom.transform, d3.zoomIdentity);
+					console.log("resetted called");
+			}
+
 	    });
 	};
 };

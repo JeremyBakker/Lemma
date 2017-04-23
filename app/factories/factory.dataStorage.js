@@ -9,6 +9,11 @@ module.exports = function DataStorageFactory ($q, $http, firebaseCredentials) {
 		setQueryArray = queryArray; 
 	};
 
+	let controlData = [];
+	let setControlData = (idfPrepArray) => {
+		controlData = idfPrepArray;
+	}
+
 	let originalFirebaseControlData = [];
 	let setOriginalFirebaseData = (firebaseControlData) => {
 		originalFirebaseControlData = firebaseControlData;
@@ -22,10 +27,11 @@ module.exports = function DataStorageFactory ($q, $http, firebaseCredentials) {
 
 	let getSetData = () => {
 		return {
+				"controlData": controlData,
 				"originalFirebaseControlData": originalFirebaseControlData,
 				"queryArray": setQueryArray,
-				"setFirebaseControlData": setFirebaseControlData};
+				"setFirebaseControlData": setFirebaseControlData}
 	};
 
-	return {setData, getSetData, setFirebaseData, setOriginalFirebaseData};
+	return {setData, getSetData, setFirebaseData, setOriginalFirebaseData, setControlData};
 };
