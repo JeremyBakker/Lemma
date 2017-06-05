@@ -168,9 +168,9 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 			let controlObject = firebaseControlData[i].data[individualIdfKeys[i]];
 			let Data = DataStorageFactory.getSetData();
 			if (controlObject === undefined) {
-				queryObject.inverseDocumentFrequency = 1 + Math.log10((Data.controlData[0].numberOfDocuments + 1) / 1)
+				queryObject.inverseDocumentFrequency = 1 + Math.log10((Data.controlData[0].numberOfDocuments + 1) / 1);
 			} else {
-				queryObject.inverseDocumentFrequency = 1 + Math.log10((Data.controlData[0].numberOfDocuments + 1) / (controlObject.documentFrequency + 1))
+				queryObject.inverseDocumentFrequency = 1 + Math.log10((Data.controlData[0].numberOfDocuments + 1) / (controlObject.documentFrequency + 1));
 			}
 			// console.log("Data", Data);
 			// if (controlObject === undefined && Data.originalFirebaseControlData.config.data.includes('Test') === true) {

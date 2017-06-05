@@ -186,7 +186,7 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials, DataStora
 				1 + Math.log10(sortedTokensArray.length/sortedIdfPrepArray[i].documentFrequency);
 			sortedIdfPrepArray[i].tfIdf = sortedIdfPrepArray[i].inverseDocumentFrequency * 
 				sortedIdfPrepArray[i].termFrequency;
-			sortedIdfPrepArray[i].numberOfDocuments = sortedTokensArray.length
+			sortedIdfPrepArray[i].numberOfDocuments = sortedTokensArray.length;
 		}
 		DataStorageFactory.setControlData(idfPrepArray);
 		setDataToOutput(idfPrepArray);

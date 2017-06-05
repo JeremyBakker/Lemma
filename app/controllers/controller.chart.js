@@ -10,6 +10,8 @@ module.exports = function($scope, $document, DataStorageFactory, firebaseCredent
 		let firebaseControlData = DataStorageFactory.getSetData();
 		let path = firebaseControlData.originalFirebaseControlData.data.name;	
 
+		let d3 = require('../../lib/node_modules/d3/d3.min.js');
+
 		d3.json(`${firebaseValues.databaseURL}${path}.json`, function(error, data) {
 
 			var svg = d3.select("#svg"),
@@ -22,14 +24,14 @@ module.exports = function($scope, $document, DataStorageFactory, firebaseCredent
 				.on("zoom", zoomed);
 
 			let xDomain = d3.extent(data, function(element) {
-			return element.termFrequency - .002;
+			return element.termFrequency - 0.002;
 			});
 			let xScale = d3.scaleLinear()
 				.domain(xDomain)
 				.range([-1, width + 500]);
 
 			let yDomain = d3.extent(data, function(element){
-			return element.inverseDocumentFrequency + .05;
+			return element.inverseDocumentFrequency + 0.05;
 			});
 
 			let yScale = d3.scaleLinear()
@@ -77,9 +79,9 @@ module.exports = function($scope, $document, DataStorageFactory, firebaseCredent
 					.append('g')
 					.attr('class', 'dots')
 					.attr('transform', function(d) {
-						cx = xScale(d.termFrequency)
-						cy = yScale(d.inverseDocumentFrequency)
-						return 'translate(' + cx + ',' + cy + ')'
+						cx = xScale(d.termFrequency);
+						cy = yScale(d.inverseDocumentFrequency);
+						return 'translate(' + cx + ',' + cy + ')';
 						})
 						.style('stroke', '#000')
 						.style('fill', 'grey');
@@ -94,9 +96,9 @@ module.exports = function($scope, $document, DataStorageFactory, firebaseCredent
 		    	gX.call(xAxis.scale(d3.event.transform.rescaleX(xScale)));
 		    	gY.call(yAxis.scale(d3.event.transform.rescaleY(yScale)));
 		    	dots.attr('transform', function(d) {
-		    		cx = d3.event.transform.applyX(xScale(d.termFrequency))
-		    		cy = d3.event.transform.applyY(yScale(d.inverseDocumentFrequency))
-		    		return 'translate(' + cx + ',' + cy + ')'
+		    		cx = d3.event.transform.applyX(xScale(d.termFrequency));
+		    		cy = d3.event.transform.applyY(yScale(d.inverseDocumentFrequency));
+		    		return 'translate(' + cx + ',' + cy + ')';
 		    	});
 			}
 
@@ -130,7 +132,7 @@ module.exports = function($scope, $document, DataStorageFactory, firebaseCredent
 					.duration(750)
 					.call(zoom.transform, d3.zoomIdentity);
 					console.log("resetted called");
-			}
+			};
 
 	    });
 	};
