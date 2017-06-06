@@ -18,7 +18,7 @@ Lemma is a scalable, single-page JavaScript application for natural-language pro
 Lemma is my first step in testing a theory I have about the use of digital tools to quantify qualitative human phenomena. After reading Bren&#233; Brown's [_Daring Greatly_](https://www.amazon.com/Daring-Greatly-Courage-Vulnerable-Transforms/dp/1592408419/ref=sr_1_1?s=books&ie=UTF8&qid=1484430978&sr=1-1&keywords=daring+greatly), I decided to test the limits of my ability to quantify abstract ideas. Early in that book, Brown writes, "I was riveted by a statement from one of my research professors, 'If you can't measure it, it doesn't exist.'" As a New Testament scholar, I spent years studying religion. I have read countless accounts of religious struggle. The tradition tells me religious struggle exists. Brown's professor tells me I should be able to measure it. 
 
 
-### Prerequisites
+## Prerequisites
 
 Install [npm](https://www.npmjs.com/)
 
