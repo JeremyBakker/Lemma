@@ -39,7 +39,7 @@ COMING SOON. . .
 
 ## Maintainer
 
-[Jeremy Bakker](https://github.com/JeremyBakker).
+[Jeremy Bakker](https://github.com/JeremyBakker)
 
 ## Contribute
 
