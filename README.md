@@ -27,7 +27,7 @@ Install [Browserify](http://browserify.org/)
 Install [Grunt](https://gruntjs.com/getting-started)
 
 ## Installation of Lem(m)a
-```sh
+```
 $ git clone https://github.com/JeremyBakker/Lemma.git
 $ cd Lemma/lib
 $ npm install
