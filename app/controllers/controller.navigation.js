@@ -21,7 +21,7 @@ module.exports = function($scope, $location) {
     };
 
     $scope.hide = function() {
-        $("#navButtons").hide()
+        $("#navButtons").hide();
     };
 
 };
