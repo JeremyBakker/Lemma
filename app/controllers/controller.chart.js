@@ -10,7 +10,7 @@ module.exports = function($scope, $document, DataStorageFactory, firebaseCredent
 		let firebaseControlData = DataStorageFactory.getSetData();
 		let path = firebaseControlData.originalFirebaseControlData.data.name;	
 
-		let d3 = require('../../lib/node_modules/d3/d3.min.js');
+		let d3 = require('../../lib/node_modules/d3/build/d3.min.js');
 
 		d3.json(`${firebaseValues.databaseURL}${path}.json`, function(error, data) {
 

@@ -12,6 +12,7 @@
     "angular": "^1.6.2",
     "angular-route": "^1.6.2",
     "bootstrap": "^3.3.7",
+    "d3": "^4.9.1",
     "firebase": "^3.7.0",
     "grunt": "^1.0.1",
     "grunt-browserify": "^5.0.0",

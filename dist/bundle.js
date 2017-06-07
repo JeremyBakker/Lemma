@@ -193,11 +193,13 @@ module.exports = function($scope, $document, DataFactory) {
 module.exports = function($scope, $window, DataFactory) {
 
 	$scope.getPsalmsData = () => {
+        $("#navButtons").show();
 		DataFactory.getPsalmsJSON();
 		$window.location.href="#!/ControlData";
 	};
 
 	$scope.getTestData = () => {
+        $("#navButtons").show();
 		DataFactory.getTestJSON();
 		$window.location.href="#!/ControlData";
 	};
@@ -208,7 +210,7 @@ module.exports = function($scope, $window, DataFactory) {
 
 module.exports = function($scope, $location) {
 
-	$(".button-collapse").sideNav();
+    $(".button-collapse").sideNav();
 
 	$scope.home = function(){
         $location.url("/");
@@ -224,6 +226,10 @@ module.exports = function($scope, $location) {
 
     $scope.chart = function(){
         $location.url("/Chart");
+    };
+
+    $scope.hide = function() {
+        $("#navButtons").hide()
     };
 
 };

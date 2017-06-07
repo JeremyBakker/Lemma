@@ -2,7 +2,7 @@
 
 module.exports = function($scope, $location) {
 
-	$(".button-collapse").sideNav();
+    $(".button-collapse").sideNav();
 
 	$scope.home = function(){
         $location.url("/");
@@ -18,6 +18,10 @@ module.exports = function($scope, $location) {
 
     $scope.chart = function(){
         $location.url("/Chart");
+    };
+
+    $scope.hide = function() {
+        $("#navButtons").hide();
     };
 
 };
