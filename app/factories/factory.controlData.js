@@ -2,7 +2,7 @@
 
 module.exports = function DataFactory ($q, $http, firebaseCredentials, DataStorageFactory) {
 
-	let natural = require('../../lib/node_modules/natural/'),
+	let natural = require('../../lib/natural/'),
 		stopWord = require('../../lib/node_modules/stopword/lib/stopword.js');
 
 	let tokenizer = new natural.WordTokenizer();
