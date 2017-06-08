@@ -55,14 +55,22 @@ Then host your server, open your favorite internet browser and go to your [Local
 
 The opening page allows you to choose between working with "Sample Data" or "Data from Psalms."
 
+![image](https://user-images.githubusercontent.com/24864800/26938222-333e8d88-4c39-11e7-93e3-a0f78ab5b853.png)
+
 The sample data is a simple sentence: "The sun in the sky is bright and hot today."
 The data from psalms are the thirty individual psalms of lament as categorized by [Hermann Gunkel](https://en.wikipedia.org/wiki/Hermann_Gunkel). See [here](http://biblical-studies.ca/pdfs/Gunkel_Classification_of_the_Psalms.pdf) for more detail.
 
 The "Control Data" page displays the individual words, the documents in which they appear, the [normalized term frequency (adjusted for document length)](https://en.wikipedia.org/wiki/Tf%E2%80%93idf#Term_frequency_2), the [inverse document frequency](https://en.wikipedia.org/wiki/Tf%E2%80%93idf#Inverse_document_frequency_2), and the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) values. Please note that all [stop words](https://en.wikipedia.org/wiki/Stop_words) have been removed
 
+![image](https://user-images.githubusercontent.com/24864800/26938280-62aa2942-4c39-11e7-8fc5-5d77c412df10.png)
+
 The "Query Data" page asks for a query to analyze against the sample data. It will calculate the cosine similarity between the control data and the query. As with the control data, the program removes all stop words from the query.
 
+![image](https://user-images.githubusercontent.com/24864800/26938360-9eedae24-4c39-11e7-8575-bd5460ac05b6.png)
+
 The "Chart Page" will display all the words as a scatter plot with the term frequencies as the x-axis and the inverse document frequency as the y-axis. Each point responds to a mouse hover and displays the relevant data in a tooltip on the left side of the screen.
+
+![image](https://user-images.githubusercontent.com/24864800/26938388-b695ee6a-4c39-11e7-867d-fa12df6fc895.png)
 
 ## A Note on Firebase
 
