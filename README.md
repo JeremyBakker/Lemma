@@ -8,7 +8,7 @@ Lemma is a scalable, single-page JavaScript application for natural-language pro
 - [Background](#background)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [Getting Started](#getting)
+- [Getting Started](#gettingstarted)
 - [Usage](#usage)
 - [Maintainers](#maintainers)
 - [Contribute](#contribute)
@@ -53,7 +53,7 @@ The opening page allows you to choose between working with "Sample Data" or "Dat
 The sample data is a simple sentence: "The sun in the sky is bright and hot today."
 The data from psalms are the thirty individual psalms of lament as categorized by [Hermann Gunkel](https://en.wikipedia.org/wiki/Hermann_Gunkel). See [here](http://biblical-studies.ca/pdfs/Gunkel_Classification_of_the_Psalms.pdf) for more.
 
-The "Control Data" page displays the individual words, the documents in which they appear, the normalized term frequency, the inverse document frequency, and the tf-idf values.
+The "Control Data" page displays the individual words, the documents in which they appear, the normalized term frequency, the inverse document frequency, and the tf-idf values. Please note that all stop words have been removed
 
 The "Query Data" page asks for a query to analyze against the sample data. It will calculate the cosine similarity between the control data and the query.
 
