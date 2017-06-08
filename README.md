@@ -96,7 +96,6 @@ I left my database authentication credentials publicly accessible for ease of ac
 
 Please contribute! [Open an issue](https://github.com/JeremyBakker/Lemma/issues/new) or [submit PRs](https://github.com/JeremyBakker/Lemma/pulls). 
 
-
 ## License
 
 [MIT](LICENSE) © Jeremy Bakker
