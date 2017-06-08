@@ -43,7 +43,7 @@ $ cd Lemma/lib
 $ grunt
 ```
 
-In a second terminal, host your server, then open your favorite internet browser and go to your [Local Host - port: 8000](http://localhost:8000/).
+In a second terminal, host your server, then open your favorite internet browser and go to your [Local Host - port: 8080](http://localhost:8080/).
 
 The opening page allows you to choose between working with ```Sample Data``` or ```Data from Psalms```.
 
