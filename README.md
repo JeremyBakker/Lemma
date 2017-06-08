@@ -7,7 +7,7 @@ Lemma is a scalable, single-page JavaScript application for natural-language pro
 
 - [Background](#background)
 - [Prerequisites](#prerequisites)
-- [Installation](#installation)
+- [Installation](#install)
 - [Getting Started](#getting-started)
 - [Usage](#usage)
 - [A Note on Firebase](#a-note-on-firebase)
@@ -28,7 +28,7 @@ Install [Browserify](http://browserify.org/)
 
 Install [Grunt](https://gruntjs.com/getting-started)
 
-## Installation of Lem(m)a
+## Install Lem(m)a
 ```
 $ git clone https://github.com/JeremyBakker/Lemma.git
 $ cd Lemma/lib
