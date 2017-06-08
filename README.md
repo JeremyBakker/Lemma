@@ -7,8 +7,10 @@ Lemma is a scalable, single-page JavaScript application for natural-language pro
 
 - [Background](#background)
 - [Prerequisites](#prerequisites)
-- [Installation](#installation)
+- [Installation](#install-lemma)
+- [Getting Started](#getting-started)
 - [Usage](#usage)
+- [A Note on Firebase](#a-note-on-firebase)
 - [Maintainers](#maintainers)
 - [Contribute](#contribute)
 - [License](#license)
@@ -26,16 +28,57 @@ Install [Browserify](http://browserify.org/)
 
 Install [Grunt](https://gruntjs.com/getting-started)
 
-## Installation of Lem(m)a
+## Install Lem(m)a
 ```
 $ git clone https://github.com/JeremyBakker/Lemma.git
 $ cd Lemma/lib
 $ npm install
 ```
 
+## Getting Started
+
+Open two terminal windows.
+
+In one terminal:
+```
+$ cd Lemma/lib
+$ grunt
+```
+
+In a second terminal:
+```
+$ cd Lemma
+```
+Then host your server, open your favorite internet browser and go to your [Local Host - port: 8080](http://localhost:8080/).
+
 ## Usage
 
-COMING SOON. . .
+The opening page allows you to choose between working with "Sample Data" or "Data from Psalms."
+
+The sample data is a simple sentence: "The sun in the sky is bright and hot today."
+The data from psalms are the thirty individual psalms of lament as categorized by [Hermann Gunkel](https://en.wikipedia.org/wiki/Hermann_Gunkel). See [here](http://biblical-studies.ca/pdfs/Gunkel_Classification_of_the_Psalms.pdf) for more detail.
+
+The "Control Data" page displays the individual words, the documents in which they appear, the [normalized term frequency (adjusted for document length)](https://en.wikipedia.org/wiki/Tf%E2%80%93idf#Term_frequency_2), the [inverse document frequency](https://en.wikipedia.org/wiki/Tf%E2%80%93idf#Inverse_document_frequency_2), and the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) values. Please note that all [stop words](https://en.wikipedia.org/wiki/Stop_words) have been removed
+
+The "Query Data" page asks for a query to analyze against the sample data. It will calculate the cosine similarity between the control data and the query.
+
+The "Chart Page" will display all the words as a scatter plot with the term frequencies as the x-axis and the inverse document frequency as the y-axis. Each point responds to a mouse hover and displays the relevant data in a tooltip on the left side of the screen.
+
+## A Note on Firebase
+
+I left my Firebase API key publicly accessible for ease of access. I don't want developers to have to setup a new Firebase project in order to use this application. The only data stored in Firebase is refreshed with each calculation, so the database can be wiped clean without any negative consequences. Nonetheless, should anyone wish to fork the project and hide his or her Firebase API key, the code is designed to make that possible. Simply replace my code in the app/values/firebaseCredentials.js file and add the file to your .gitignore before pushing to your repository. You will need to set your database rules as follows: 
+
+```
+{
+  "rules": {
+    ".read": true,
+    ".write": true,
+    "$firebaseID":{
+    ".indexOn":["document", "word"]
+  	}
+  }
+}
+```
 
 ## Maintainer
 
@@ -43,7 +86,7 @@ COMING SOON. . .
 
 ## Contribute
 
-Please contribute! [Open an issue](https://github.com/JeremyBakker/Lemma/issues/new) or submit PRs.
+Please contribute! [Open an issue](https://github.com/JeremyBakker/Lemma/issues/new) or [submit PRs](https://github.com/JeremyBakker/Lemma/pulls). 
 
 
 ## License
