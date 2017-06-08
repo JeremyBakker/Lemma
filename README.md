@@ -70,7 +70,7 @@ The "Query Data" page asks for a query to analyze against the sample data. It wi
 
 The "Chart Page" will display all the words as a scatter plot with the term frequencies as the x-axis and the inverse document frequency as the y-axis. Each point responds to a mouse hover and displays the relevant data in a tooltip on the left side of the screen.
 
-![image](https://user-images.githubusercontent.com/24864800/26938388-b695ee6a-4c39-11e7-867d-fa12df6fc895.png)
+![image](https://user-images.githubusercontent.com/24864800/26938871-250c80f6-4c3b-11e7-8dbc-210277610d3c.png)
 
 ## A Note on Firebase
 
