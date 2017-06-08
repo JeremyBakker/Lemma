@@ -45,7 +45,7 @@ $ grunt
 
 In a second terminal, host your server, then open your favorite internet browser and go to your [Local Host - port: 8080](http://localhost:8080/).
 
-The opening page allows you to choose between working with ```Sample Data``` or ```Data from Psalms```.
+The opening page allows you to choose between working with "Sample Data" or "Data from Psalms."
 
 The sample data is a simple sentence: "The sun in the sky is bright and hot today."
 The data from psalms are the thirty individual psalms of lament as categorized by [Hermann Gunkel](https://en.wikipedia.org/wiki/Hermann_Gunkel). See [here](http://biblical-studies.ca/pdfs/Gunkel_Classification_of_the_Psalms.pdf) for more.
