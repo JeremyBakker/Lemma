@@ -8,6 +8,7 @@ Lemma is a scalable, single-page JavaScript application for natural-language pro
 - [Background](#background)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
+- [Getting Started](#getting)
 - [Usage](#usage)
 - [Maintainers](#maintainers)
 - [Contribute](#contribute)
@@ -33,7 +34,7 @@ $ cd Lemma/lib
 $ npm install
 ```
 
-## Usage
+## Getting Started
 
 Open two terminal windows.
 
@@ -44,6 +45,8 @@ $ grunt
 ```
 
 In a second terminal, host your server, then open your favorite internet browser and go to your [Local Host - port: 8080](http://localhost:8080/).
+
+## Usage
 
 The opening page allows you to choose between working with "Sample Data" or "Data from Psalms."
 
