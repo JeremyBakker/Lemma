@@ -131,7 +131,6 @@ module.exports = function($scope, $document, DataStorageFactory, firebaseCredent
 				svg.transition()
 					.duration(750)
 					.call(zoom.transform, d3.zoomIdentity);
-					console.log("resetted called");
 			};
 
 	    });

@@ -110,8 +110,6 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 		// from Psalms. The path is a key assigned by Firebase.
 
 		let firebaseControlData = DataStorageFactory.getSetData();
-		console.log("firebaseControlData at grabControlData", firebaseControlData);
-		console.log("path", firebaseControlData.originalFirebaseControlData.data.name);
 		path = firebaseControlData.originalFirebaseControlData.data.name;
 		return $q((resolve, reject) => {
 			$http.get(`${firebaseValues.databaseURL}${path}.json?orderBy=
@@ -137,7 +135,6 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 		let controlIdfKeys = [];
 		let individualIdfKeys = [];
 		for (var i = 0; i < firebaseControlData.length; i++) {
-			console.log("firebaseControlData at keys", firebaseControlData);
 			let keys = Object.keys(firebaseControlData[i].data);
 			controlIdfKeys.push(keys);
 		}
@@ -172,22 +169,9 @@ module.exports = function QueryFactory ($q, $http, firebaseCredentials, DataFact
 			} else {
 				queryObject.inverseDocumentFrequency = 1 + Math.log10((Data.controlData[0].numberOfDocuments + 1) / (controlObject.documentFrequency + 1));
 			}
-			// console.log("Data", Data);
-			// if (controlObject === undefined && Data.originalFirebaseControlData.config.data.includes('Test') === true) {
-			// 	queryObject.inverseDocumentFrequency = 1 + Math.log10(2/1);
-			// } else if (controlObject === undefined && Data.originalFirebaseControlData.config.data.includes('Psalm') === true) {
-			// 	queryObject.inverseDocumentFrequency = 1 + Math.log10(34/1);
-			// } else if (controlObject && Data.originalFirebaseControlData.config.data.includes('Test') === true) {
-			// 	queryObject.inverseDocumentFrequency = 1 + Math.log10(2 / (controlObject.documentFrequency + 1));
-			// } else if (controlObject && Data.originalFirebaseControlData.config.data.includes('Psalm') === true) {
-			// 	queryObject.inverseDocumentFrequency = 1 + Math.log10(34 / (controlObject.documentFrequency + 1));
-			// } else {
-			// 	queryObject.inverseDocumentFrequency = 1;
-			// }
 
 			queryArray.push(queryObject);
 		}
-	console.log("queryArray", queryArray);
 	setTfIdf(queryArray);
 	};
 

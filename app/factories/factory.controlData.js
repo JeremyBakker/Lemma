@@ -207,7 +207,6 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials, DataStora
 			(ObjectFromFirebase) => {
 				DataStorageFactory.setOriginalFirebaseData(ObjectFromFirebase);
 				firebaseObjectKey = ObjectFromFirebase.data.name;
-				console.log("ObjectFromFirebase at setControlData", ObjectFromFirebase);
 			});
 	};
 	// Get the hidden values from /values/firebaseCredentials.js that will allow us to 
@@ -220,7 +219,6 @@ module.exports = function DataFactory ($q, $http, firebaseCredentials, DataStora
 				angular.toJson(dataToPost))
 					.then(
 						(ObjectFromFirebase) => {
-							console.log("Here is my Firebase Object from setControlData: ", ObjectFromFirebase);
 							resolve(ObjectFromFirebase);
 						})
 					.catch((error) => error);
