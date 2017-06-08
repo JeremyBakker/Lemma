@@ -7,7 +7,7 @@ Lemma is a scalable, single-page JavaScript application for natural-language pro
 
 - [Background](#background)
 - [Prerequisites](#prerequisites)
-- [Installation](#install)
+- [Installation](#install-lemma)
 - [Getting Started](#getting-started)
 - [Usage](#usage)
 - [A Note on Firebase](#a-note-on-firebase)
