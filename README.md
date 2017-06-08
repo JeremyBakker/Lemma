@@ -35,7 +35,27 @@ $ npm install
 
 ## Usage
 
-COMING SOON. . .
+Open two terminal windows.
+
+In one terminal:
+```
+$ cd Lemma/lib
+$ grunt
+```
+
+In a second terminal, host your server, then open your favorite internet browser and go to your [Local Host - port: 8000](http://localhost:8000/).
+
+The opening page allows you to choose between working with ```Sample Data``` or ```Data from Psalms```.
+
+The sample data is a simple sentence: "The sun in the sky is bright and hot today."
+The data from psalms are the thirty individual psalms of lament as categorized by [Hermann Gunkel](https://en.wikipedia.org/wiki/Hermann_Gunkel). See [here](http://biblical-studies.ca/pdfs/Gunkel_Classification_of_the_Psalms.pdf) for more.
+
+The "Control Data" page displays the individual words, the documents in which they appear, the normalized term frequency, the inverse document frequency, and the tf-idf values.
+
+The "Query Data" page asks for a query to analyze against the sample data. It will calculate the cosine similarity between the control data and the query.
+
+The "Chart Page" will display all the words as a scatter plot with the term frequencies as the x-axis and the inverse document frequency as the y-axis. Each point responds to a mouse hover and displays the relevant data in a tooltip on the left side of the screen.
+
 
 ## Maintainer
 
@@ -43,7 +63,7 @@ COMING SOON. . .
 
 ## Contribute
 
-Please contribute! [Open an issue](https://github.com/JeremyBakker/Lemma/issues/new) or submit PRs.
+Please contribute! [Open an issue](https://github.com/JeremyBakker/Lemma/issues/new) or submit PRs. 
 
 
 ## License
