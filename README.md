@@ -86,7 +86,7 @@ I left my Firebase API key publicly accessible for ease of access. I don't want 
 
 ## Contribute
 
-Please contribute! [Open an issue](https://github.com/JeremyBakker/Lemma/issues/new) or submit PRs. 
+Please contribute! [Open an issue](https://github.com/JeremyBakker/Lemma/issues/new) or [submit PRs](https://github.com/JeremyBakker/Lemma/pulls). 
 
 
 ## License
