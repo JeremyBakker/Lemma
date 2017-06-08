@@ -45,7 +45,11 @@ $ cd Lemma/lib
 $ grunt
 ```
 
-In a second terminal, host your server, then open your favorite internet browser and go to your [Local Host - port: 8080](http://localhost:8080/).
+In a second terminal:
+'''
+$ cd Lemma
+'''
+Then host your server, then open your favorite internet browser and go to your [Local Host - port: 8080](http://localhost:8080/).
 
 ## Usage
 
