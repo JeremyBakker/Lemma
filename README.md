@@ -66,7 +66,7 @@ The "Chart Page" will display all the words as a scatter plot with the term freq
 
 ## A Note on Firebase
 
-I left my Firebase API key publicly accessible for ease of access. I don't want developers to have to setup a new Firebase project in order to use this application. The only data stored in Firebase is refreshed with each calculation, so the database can be wiped clean without any negative consequences. Nonetheless, should anyone wish to fork the project and hide his or her Firebase API key, the code is designed to make that possible. Simply replace my code in the app/values/firebaseCredentials.js file and add the file to your .gitignore before pushing to your repository. You will need to set your database rules as follows: 
+I left my database authentication credentials publicly accessible for ease of access. I don't want developers to have to setup a new Firebase project in order to experiment with this application. The only data stored in Firebase is refreshed with each calculation, so the database can be wiped clean without any negative consequences. Nonetheless, should anyone wish to fork the project and hide his or her Firebase credentials, the code is designed to make that possible. Simply replace my code in the app/values/firebaseCredentials.js file and add the file to your .gitignore before pushing to your repository. You will need to set your database rules as follows: 
 
 ```
 {
