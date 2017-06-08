@@ -24,6 +24,7 @@
     "materialize-css": "^0.98.0",
     "require": "^2.4.20",
     "requirejs": "^2.3.3",
-    "stopword": "^0.1.1"
+    "stopword": "^0.1.1",
+    "underscore": "^1.8.3"
   }
 }
