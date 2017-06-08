@@ -51,9 +51,9 @@ In a second terminal, host your server, then open your favorite internet browser
 The opening page allows you to choose between working with "Sample Data" or "Data from Psalms."
 
 The sample data is a simple sentence: "The sun in the sky is bright and hot today."
-The data from psalms are the thirty individual psalms of lament as categorized by [Hermann Gunkel](https://en.wikipedia.org/wiki/Hermann_Gunkel). See [here](http://biblical-studies.ca/pdfs/Gunkel_Classification_of_the_Psalms.pdf) for more.
+The data from psalms are the thirty individual psalms of lament as categorized by [Hermann Gunkel](https://en.wikipedia.org/wiki/Hermann_Gunkel). See [here](http://biblical-studies.ca/pdfs/Gunkel_Classification_of_the_Psalms.pdf) for more detail.
 
-The "Control Data" page displays the individual words, the documents in which they appear, the normalized term frequency, the inverse document frequency, and the tf-idf values. Please note that all stop words have been removed
+The "Control Data" page displays the individual words, the documents in which they appear, the [normalized term frequency (adjusted for document length)](https://en.wikipedia.org/wiki/Tf%E2%80%93idf#Term_frequency_2), the [inverse document frequency](https://en.wikipedia.org/wiki/Tf%E2%80%93idf#Inverse_document_frequency_2), and the [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) values. Please note that all stop words have been removed
 
 The "Query Data" page asks for a query to analyze against the sample data. It will calculate the cosine similarity between the control data and the query.
 
