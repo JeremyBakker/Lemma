@@ -60,7 +60,7 @@ The "Query Data" page asks for a query to analyze against the sample data. It wi
 
 The "Chart Page" will display all the words as a scatter plot with the term frequencies as the x-axis and the inverse document frequency as the y-axis. Each point responds to a mouse hover and displays the relevant data in a tooltip on the left side of the screen.
 
-## A Note on Firebasee
+## A Note on Firebase
 
 I left my Firebase API key publicly accessible for ease of access. I don't want developers to have to setup a new Firebase project in order to use this application. The only data stored in Firebase is refreshed with each calculation, so the database can be wiped clean without any negative consequences. Nonetheless, should anyone wish to fork the project and hide his or her Firebase API key, the code is designed to make that possible. Simply replace my code in the app/values/firebaseCredentials.js file and add the file to your .gitignore before pushing to your repository. You will need to set your database rules as follows: 
 
