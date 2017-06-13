@@ -1,16 +1,16 @@
-<div id="controlChart" style="margin-top: 25px">
-	<div id="tooltip">
+<div id="controlChart" style="margin-top: 25px" class="row">
+	<div id="tooltip" class="col s2">
 		<div>
 	        <h4>Lexical Data</h4>
 	        <p>Term: <span id="word" class="tooltipWord hidden"></span><p>
 	        <p>Document: <span id="document" class="tooltipDocument hidden"></span><p>
 	        <p>tf-idf: <span id="tfIdf" class="tooltipTfIdf hidden"></span></p>
 		</div>
-	<button class="waves-effect waves-light btn grey col s6" id ="populateChart" ng-click="printChart()">Show Data</button>
+	<button class="waves-effect waves-light btn grey" id ="populateChart" ng-click="printChart()">Show Data</button>
 	<button class="waves-effect waves-light btn grey" id="resetView" ng-click="callResetted()">Reset View</button>
 	</div>
-	<p id="inverseDocumentFrequency">Inverse Document Frequency</p>
-	<svg width = "760" height = "400" id="svg" style="margin-left: 50px">
+	<svg width = "760" height = "400" id="svg" style="margin-left: 50px; padding: 15px 0 30px 15px" class="col s9">
+		<text x="630" y="380" id="termFrequency">Term Frequency</text>
+		<text x="0" y="5" id="inverseDocumentFrequency">Inverse Document Frequency</text>
 	</svg>
-	<p id="termFrequency">Term Frequency</p>
 </div>

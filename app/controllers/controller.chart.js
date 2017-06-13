@@ -61,8 +61,8 @@ module.exports = function($scope, $document, DataStorageFactory, firebaseCredent
 		    	.attr("class", "view")
 		    	.attr("x", 0.5)
 		    	.attr("y", 0.5)
-		    	.attr("width", width - 15)
-		    	.attr("height", height - 15)
+		    	.attr("width", width - 50)
+		    	.attr("height", height - 50	)
 		    	.attr("opacity", 0);
 
 		    let gX = svg.append("g")
