@@ -5,12 +5,14 @@
 	        <p>Term: <span id="word" class="tooltipWord hidden"></span><p>
 	        <p>Document: <span id="document" class="tooltipDocument hidden"></span><p>
 	        <p>tf-idf: <span id="tfIdf" class="tooltipTfIdf hidden"></span></p>
+	        <p>Hover over the circles to populate data.</p>
+	        <p>Zoom by scrolling.
+	        <p class="text-center">The vertical axis is the Inverse Document Frequency.</p>
+	        <p class="text-center">The horizontal axis is the Term Frequency.</p>
 		</div>
 	<button class="waves-effect waves-light btn grey" id ="populateChart" ng-click="printChart()">Show Data</button>
 	<button class="waves-effect waves-light btn grey" id="resetView" ng-click="callResetted()">Reset View</button>
 	</div>
-	<svg width = "760" height = "400" id="svg" style="margin-left: 50px; padding: 15px 0 30px 15px" class="col s9">
-		<text x="630" y="380" id="termFrequency" style="fill:red">Term Frequency</text>
-		<text x="0" y="5" id="inverseDocumentFrequency" style="fill: red">Inverse Document Frequency</text>
+	<svg width = "760" height = "400" id="svg" style="margin-left: 50px" class="col s9">
 	</svg>
 </div>
